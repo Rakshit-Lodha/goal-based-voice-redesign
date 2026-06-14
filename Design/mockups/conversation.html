@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Maya · conversation-first</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:        #0A1628;
+  --navy-2:      #142239;
+  --cream:       #F7F2EA;
+  --cream-2:     #EFE7D6;
+  --hairline:    #E6DECF;
+  --hairline-2:  #D8CFBC;
+  --champagne:   #C9A961;
+  --champagne-2: #B89548;
+  --green:       #3D7C57;
+  --ink:         #1A1F2E;
+  --ink-mute:    #6B6356;
+  --ink-soft:    #4A4538;
+  --on-dark:     #F7F2EA;
+  --on-dark-mute:#8C97AB;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #161E2E; color: var(--on-dark);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 56px 24px 80px;
+}
+h1 { font-family: var(--serif); font-weight: 400; font-size: 28px; letter-spacing: -0.02em; }
+.sub { color: var(--on-dark-mute); font-size: 13px; max-width: 540px; text-align: center; line-height: 1.55; margin-top: 8px; }
+
+.phone {
+  width: 390px; height: 844px;
+  border-radius: 44px;
+  background: var(--navy);
+  background-image:
+    radial-gradient(circle at 50% 38%, rgba(155,175,220,0.10), transparent 55%),
+    radial-gradient(circle at 50% 86%, rgba(10,22,40,0.6), transparent 50%);
+  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+  position: relative;
+  margin-top: 32px;
+}
+
+.brand {
+  position: absolute; top: 56px; left: 24px; right: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 5;
+}
+.brand-mark { font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--cream); font-weight: 500; }
+.brand-mark em { font-style: italic; color: var(--champagne); }
+
+/* Ledger chip — the only persistent navigation affordance */
+.ledger-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(247,242,234,0.06);
+  border: 1px solid rgba(247,242,234,0.10);
+  padding: 7px 12px 7px 9px; border-radius: 999px;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--cream);
+  cursor: pointer;
+  transition: background 200ms;
+}
+.ledger-chip:hover { background: rgba(247,242,234,0.10); }
+.ledger-chip .stack {
+  width: 14px; height: 14px; position: relative;
+}
+.ledger-chip .stack::before, .ledger-chip .stack::after {
+  content: ""; position: absolute; inset: 0;
+  border: 1px solid var(--champagne); border-radius: 2px;
+}
+.ledger-chip .stack::before { transform: translate(-2px, 2px); opacity: 0.5; }
+.ledger-chip .count { color: var(--champagne); font-weight: 600; }
+
+/* ============ The Orb (centred, always) ============ */
+.orb-wrap {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) translateY(var(--orb-y, 0px));
+  transition: transform 800ms var(--ease);
+  z-index: 3;
+}
+.orb {
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  transform: scale(var(--orb-scale, 1));
+  transition:
+    transform 800ms var(--ease),
+    background 800ms var(--ease),
+    box-shadow 800ms var(--ease),
+    opacity 600ms var(--ease);
+  background: radial-gradient(circle at 35% 30%, #7889A8 0%, #3A4866 35%, #1B2A45 75%);
+  box-shadow:
+    0 0 80px 12px rgba(155,175,220,0.18),
+    0 0 160px 30px rgba(155,175,220,0.08),
+    inset 0 -12px 28px rgba(0,0,0,0.34),
+    inset 0 8px 14px rgba(255,255,255,0.08);
+  animation: breathe 4.5s ease-in-out infinite;
+}
+.orb.listening {
+  background: radial-gradient(circle at 35% 30%, #A8C0E6 0%, #4A6FAE 40%, #1B2A45 80%);
+  box-shadow:
+    0 0 100px 16px rgba(135, 170, 230, 0.30),
+    0 0 200px 40px rgba(135, 170, 230, 0.12),
+    inset 0 -12px 28px rgba(0,0,0,0.34),
+    inset 0 8px 14px rgba(220,235,255,0.18);
+  animation: breathe-listen 2.4s ease-in-out infinite;
+}
+.orb.talking {
+  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  box-shadow:
+    0 0 100px 14px rgba(201,169,97,0.38),
+    0 0 200px 40px rgba(201,169,97,0.18),
+    inset 0 -12px 28px rgba(80,50,10,0.4),
+    inset 0 8px 14px rgba(255,240,210,0.18);
+  animation: breathe-talk 1.6s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { filter: brightness(1.0); }
+  50% { filter: brightness(1.05); }
+}
+@keyframes breathe-listen {
+  0%, 100% { filter: brightness(1.0); }
+  50% { filter: brightness(1.12); }
+}
+@keyframes breathe-talk {
+  0%, 100% { filter: brightness(1.0); }
+  50% { filter: brightness(1.10); }
+}
+
+/* The single subtitle line — what Maya is doing, in tiny text */
+.subtitle {
+  position: absolute;
+  left: 32px; right: 32px;
+  top: calc(50% + 130px);
+  text-align: center;
+  z-index: 3;
+  transform: translateY(var(--sub-y, 0px));
+  transition: transform 800ms var(--ease), opacity 600ms var(--ease);
+}
+.subtitle .who {
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--on-dark-mute);
+  margin-bottom: 8px;
+}
+.subtitle .what {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  font-size: 17px; letter-spacing: -0.005em; line-height: 1.4;
+  color: var(--cream);
+  opacity: 0.92;
+}
+.subtitle .what.dim { opacity: 0.55; }
+
+/* Tap-to-talk affordance, very subtle at bottom */
+.mic {
+  position: absolute;
+  left: 50%; bottom: 48px;
+  transform: translateX(-50%);
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(247,242,234,0.06);
+  border: 1px solid rgba(247,242,234,0.12);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 200ms, transform 200ms;
+  z-index: 4;
+}
+.mic:hover { background: rgba(247,242,234,0.10); }
+.mic:active { transform: translateX(-50%) scale(0.95); }
+.mic svg { width: 22px; height: 22px; fill: var(--cream); opacity: 0.85; }
+.mic-label {
+  position: absolute;
+  left: 50%; bottom: 28px; transform: translateX(-50%);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--on-dark-mute);
+  z-index: 4;
+}
+
+/* ============ Summoned artifacts (slide up from bottom) ============ */
+.artifact {
+  position: absolute;
+  left: 16px; right: 16px; bottom: 16px;
+  background: var(--cream); color: var(--ink);
+  border-radius: 28px; padding: 26px;
+  z-index: 6;
+  transform: translateY(120%);
+  transition: transform 700ms var(--ease);
+  max-height: 70%;
+  overflow: hidden;
+}
+.artifact.show { transform: translateY(0); }
+.artifact .eyebrow {
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-mute);
+  margin-bottom: 10px;
+}
+.artifact h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 26px; letter-spacing: -0.015em; line-height: 1.15;
+}
+.artifact h2.xl { font-size: 38px; letter-spacing: -0.02em; }
+.artifact .lede {
+  margin-top: 12px; color: var(--ink-soft);
+  font-size: 14px; line-height: 1.5;
+}
+.artifact .micro {
+  margin-top: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em;
+}
+.artifact .micro button {
+  background: none; border: none; color: var(--ink-mute);
+  font-size: 11px; letter-spacing: 0.06em; cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Hero moment — full-screen takeover */
+.hero-takeover {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #F7F2EA 0%, #EFE7D6 100%);
+  color: var(--ink);
+  z-index: 7;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 600ms var(--ease);
+}
+.hero-takeover.show { opacity: 1; pointer-events: auto; }
+.hero-takeover .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); }
+.hero-takeover h1 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 84px; letter-spacing: -0.03em;
+  color: var(--champagne-2);
+  margin-top: 14px;
+}
+.hero-takeover .meta {
+  font-size: 13px; color: var(--ink-mute); letter-spacing: 0.04em;
+  margin-top: 18px; text-align: center; line-height: 1.6;
+}
+.hero-takeover .corner-orb {
+  position: absolute; top: 56px; right: 24px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 50%, #6B4F22 100%);
+  box-shadow: 0 0 24px 4px rgba(201,169,97,0.5);
+  animation: breathe-talk 1.6s ease-in-out infinite;
+}
+.hero-takeover .dismiss {
+  position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: var(--cream);
+  font-family: var(--sans); font-size: 14px; letter-spacing: 0.02em;
+  padding: 14px 28px; border-radius: 999px; border: none; cursor: pointer;
+}
+
+/* Ledger panel — full slide-down */
+.ledger-panel {
+  position: absolute; inset: 0;
+  background: var(--cream); color: var(--ink);
+  z-index: 8;
+  transform: translateY(-100%);
+  transition: transform 600ms var(--ease);
+  padding: 64px 28px 32px;
+  overflow-y: auto;
+}
+.ledger-panel.show { transform: translateY(0); }
+.ledger-panel .lhead {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 28px;
+}
+.ledger-panel .ltitle {
+  font-family: var(--serif); font-size: 22px; letter-spacing: -0.015em;
+}
+.ledger-panel .lclose {
+  background: none; border: none; font-size: 24px; color: var(--ink-mute); cursor: pointer;
+  line-height: 1;
+}
+.ledger-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.ledger-row .lkey {
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 4px;
+}
+.ledger-row .lval { font-family: var(--serif); font-size: 16px; }
+.ledger-row .ledit {
+  font-size: 11px; color: var(--champagne-2); letter-spacing: 0.06em;
+  cursor: pointer; background: none; border: none;
+  text-transform: uppercase; font-weight: 500;
+  padding-top: 4px;
+}
+
+/* Controls */
+.controls {
+  margin-top: 32px; max-width: 480px;
+}
+.controls .row {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 10px;
+}
+.controls button {
+  background: rgba(255,255,255,0.06); color: var(--cream);
+  border: 1px solid rgba(255,255,255,0.10);
+  padding: 10px 16px; border-radius: 999px;
+  font-family: var(--sans); font-size: 12px; cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 200ms;
+}
+.controls button:hover { background: rgba(255,255,255,0.12); }
+.controls button.maya { border-color: rgba(201,169,97,0.4); color: var(--champagne); }
+.controls button.user { border-color: rgba(135,170,230,0.4); color: #A8C0E6; }
+.controls .reset {
+  background: rgba(255,255,255,0.02); color: var(--on-dark-mute);
+  margin-top: 4px;
+}
+.controls .grp {
+  font-size: 10px; letter-spacing: 0.18em; color: var(--on-dark-mute);
+  text-transform: uppercase; text-align: center; margin: 14px 0 6px;
+}
+
+.legend {
+  margin-top: 32px; max-width: 540px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 20px;
+  font-size: 13px; line-height: 1.65; color: var(--on-dark-mute);
+}
+.legend strong { color: var(--cream); font-weight: 500; }
+.legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.legend .dot.maya { background: var(--champagne); }
+.legend .dot.user { background: #A8C0E6; }
+
+</style>
+</head>
+<body>
+
+<h1>Conversation-first — Maya as RM, not IVR</h1>
+<p class="sub">The orb is the experience. Cards are <em>summoned</em> when they earn their place — by Maya, by you, or by the moment. No wizard rail, no per-step form. Tap the buttons below to play different moments.</p>
+
+<div class="phone" id="phone">
+  <div class="brand">
+    <span class="brand-mark">Paytm <em>Money</em></span>
+    <div class="ledger-chip" onclick="openLedger()">
+      <div class="stack"></div>
+      <span><span class="count" id="ledgerCount">0</span> · confirmed</span>
+    </div>
+  </div>
+
+  <!-- The orb, centred -->
+  <div class="orb-wrap" id="orbWrap">
+    <div class="orb" id="orb"></div>
+  </div>
+
+  <!-- Subtitle: who's doing what -->
+  <div class="subtitle" id="subtitle">
+    <div class="who" id="subWho">Maya</div>
+    <div class="what" id="subWhat">"Hi Rakshit. Let's build your plan."</div>
+  </div>
+
+  <!-- Tap to talk -->
+  <div class="mic-label">Tap or just talk</div>
+  <div class="mic" onclick="userTapMic()">
+    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+  </div>
+
+  <!-- Artifact slot -->
+  <div class="artifact" id="artifact">
+    <div class="eyebrow" id="artEyebrow"></div>
+    <h2 id="artTitle"></h2>
+    <div id="artBody"></div>
+    <div class="micro">
+      <span id="artHint">Maya summoned this</span>
+      <button onclick="dismissArtifact()">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Hero takeover -->
+  <div class="hero-takeover" id="hero">
+    <div class="corner-orb"></div>
+    <div class="eyebrow">Your monthly SIP, all goals</div>
+    <h1>₹ 50,000</h1>
+    <div class="meta">Aggressive · Long horizon · 3-phase glide<br/>Home in Pune · Aanya's education · Retirement</div>
+    <button class="dismiss" onclick="closeHero()">I'm with you, Maya. Continue.</button>
+  </div>
+
+  <!-- Ledger panel -->
+  <div class="ledger-panel" id="ledger">
+    <div class="lhead">
+      <div class="ltitle">What Maya knows</div>
+      <button class="lclose" onclick="closeLedger()">×</button>
+    </div>
+    <div id="ledgerRows"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="grp">Maya does something</div>
+  <div class="row">
+    <button class="maya" onclick="mayaGreets()">Greet</button>
+    <button class="maya" onclick="mayaAsks('risk')">Ask: risk</button>
+    <button class="maya" onclick="mayaAsks('family')">Ask: family</button>
+    <button class="maya" onclick="mayaSummons('risk')">Summon risk card</button>
+    <button class="maya" onclick="mayaSummons('inflation')">Show inflation curve</button>
+    <button class="maya" onclick="mayaHero()">Reveal the plan ★</button>
+  </div>
+
+  <div class="grp">You do something</div>
+  <div class="row">
+    <button class="user" onclick="userAsks('family')">"Show me my family"</button>
+    <button class="user" onclick="userAsks('plan')">"What's my SIP again?"</button>
+    <button class="user" onclick="openLedger()">Open the ledger</button>
+  </div>
+
+  <div class="row">
+    <button class="reset" onclick="reset()">↺ Reset to listening</button>
+  </div>
+</div>
+
+<div class="legend">
+  <strong>Read the design:</strong> the orb never leaves the centre. Subtitle below it shows what Maya is doing — never a form prompt, just one italic line of voice.<br/><br/>
+  <strong>Artifacts (<span class="dot maya"></span>champagne) are summoned by Maya</strong> at moments that earn it (consent, math reveal, plan).<br/>
+  <strong>Artifacts (<span class="dot user"></span>blue) are summoned by you</strong> when you want to see something you already discussed.<br/><br/>
+  <strong>The reveal ★</strong> is the one moment the orb gives way: it shrinks to a corner ring, the cream takes over the screen, the SIP number lands alone. That asymmetry is the design — most of the time you talk; once, the result hits.
+</div>
+
+<script>
+const orb = document.getElementById('orb');
+const orbWrap = document.getElementById('orbWrap');
+const subWho = document.getElementById('subWho');
+const subWhat = document.getElementById('subWhat');
+const artifact = document.getElementById('artifact');
+const hero = document.getElementById('hero');
+const ledger = document.getElementById('ledger');
+const ledgerCount = document.getElementById('ledgerCount');
+const ledgerRows = document.getElementById('ledgerRows');
+const phone = document.getElementById('phone');
+
+// Mock "what Maya knows" — grows as Maya confirms things
+const facts = [];
+
+function setMood(mood) {
+  orb.classList.remove('listening', 'talking');
+  if (mood) orb.classList.add(mood);
+}
+function setSubtitle(who, what) {
+  subWho.textContent = who;
+  subWhat.textContent = what;
+}
+function shrinkOrbForArtifact() {
+  phone.style.setProperty('--orb-y', '-160px');
+  phone.style.setProperty('--orb-scale', '0.55');
+}
+function restoreOrb() {
+  phone.style.setProperty('--orb-y', '0px');
+  phone.style.setProperty('--orb-scale', '1');
+}
+
+function reset() {
+  setMood('listening');
+  setSubtitle('Maya', 'listening…');
+  dismissArtifact();
+  closeHero();
+  closeLedger();
+}
+
+function mayaGreets() {
+  setMood('talking');
+  setSubtitle('Maya', '"Hi Rakshit. Let\'s build your plan in ten minutes."');
+}
+
+function mayaAsks(topic) {
+  setMood('talking');
+  if (topic === 'risk') setSubtitle('Maya', '"If your portfolio dropped 30% next month, what would you do?"');
+  if (topic === 'family') setSubtitle('Maya', '"Tell me about your family — who are we planning for?"');
+}
+
+function mayaSummons(kind) {
+  setMood('talking');
+  shrinkOrbForArtifact();
+  document.getElementById('artHint').textContent = 'Maya summoned this';
+
+  if (kind === 'risk') {
+    setSubtitle('Maya', '"You\'re aggressive — equity-tilted, long horizon. Here\'s what that means."');
+    fillArtifact({
+      eyebrow: 'Your risk profile',
+      title: 'Aggressive',
+      body: `<p class="lede">75% equity tilt · 13% expected return. You hold through downturns, and likely top up.</p>`
+    });
+    addFact('Risk profile', 'Aggressive');
+  }
+  if (kind === 'inflation') {
+    setSubtitle('Maya', '"That ₹1.1 Cr home will cost ₹2.5 Cr by 2038. Inflation moves faster than most realise."');
+    fillArtifact({
+      eyebrow: 'Home in Pune · target',
+      title: '₹ 2.5 Cr by 2038',
+      body: `
+        <svg viewBox="0 0 320 110" style="width: 100%; height: 100px; margin-top: 8px;">
+          <defs><linearGradient id="cf" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#C9A961" stop-opacity="0.35"/><stop offset="100%" stop-color="#C9A961" stop-opacity="0"/></linearGradient></defs>
+          <line x1="0" y1="100" x2="320" y2="100" stroke="#D8CFBC"/>
+          <path d="M 0 90 Q 100 86 160 68 T 320 14 L 320 100 L 0 100 Z" fill="url(#cf)"/>
+          <path d="M 0 90 Q 100 86 160 68 T 320 14" stroke="#B89548" stroke-width="2" fill="none"/>
+          <circle cx="0" cy="90" r="3.5" fill="#1A1F2E"/>
+          <circle cx="320" cy="14" r="4.5" fill="#C9A961"/>
+        </svg>
+        <p class="lede" style="margin-top: 10px;">7% inflation · 12 years.</p>
+      `
+    });
+    addFact('Home goal', '₹2.5 Cr · 2038');
+  }
+  artifact.classList.add('show');
+}
+
+function mayaHero() {
+  setMood('talking');
+  setSubtitle('Maya', '"Here\'s your plan."');
+  dismissArtifact();
+  setTimeout(() => hero.classList.add('show'), 250);
+  addFact('Monthly SIP', '₹50,000');
+}
+
+function userTapMic() {
+  setMood('listening');
+  setSubtitle('You', 'listening to you…');
+}
+
+function userAsks(what) {
+  setMood('talking');
+  shrinkOrbForArtifact();
+  document.getElementById('artHint').textContent = 'You asked Maya';
+
+  if (what === 'family') {
+    setSubtitle('You', '"Show me what we said about my family."');
+    fillArtifact({
+      eyebrow: 'You asked · family',
+      title: 'Rakshit & Priya, with two children.',
+      body: `<p class="lede">Aanya (7) and Naman (3). Education and family goals weighted into your plan.</p>`
+    });
+  }
+  if (what === 'plan') {
+    setSubtitle('You', '"What\'s my SIP again?"');
+    fillArtifact({
+      eyebrow: 'You asked · plan',
+      title: '₹ 50,000 / month',
+      body: `<p class="lede">Aggressive · 3-phase glide. Home ₹18,500 · Aanya ₹9,500 · Retirement ₹22,000.</p>`
+    });
+  }
+  artifact.classList.add('show');
+}
+
+function fillArtifact({eyebrow, title, body}) {
+  document.getElementById('artEyebrow').textContent = eyebrow;
+  document.getElementById('artTitle').textContent = title;
+  document.getElementById('artBody').innerHTML = body || '';
+}
+
+function dismissArtifact() {
+  artifact.classList.remove('show');
+  setTimeout(restoreOrb, 250);
+  setMood('listening');
+  setSubtitle('Maya', 'listening…');
+}
+
+function closeHero() {
+  hero.classList.remove('show');
+  restoreOrb();
+  setMood('listening');
+  setSubtitle('Maya', 'listening…');
+}
+
+function openLedger() {
+  renderLedger();
+  ledger.classList.add('show');
+}
+function closeLedger() { ledger.classList.remove('show'); }
+
+function addFact(key, val) {
+  // de-dupe by key
+  const existing = facts.findIndex(f => f.key === key);
+  if (existing >= 0) facts[existing].val = val;
+  else facts.push({key, val});
+  ledgerCount.textContent = facts.length;
+}
+function renderLedger() {
+  if (facts.length === 0) {
+    ledgerRows.innerHTML = `<p style="color: var(--ink-mute); font-size: 14px; line-height: 1.5;">Nothing yet. As Maya confirms things with you, they'll show up here. Tap any row to revise.</p>`;
+    return;
+  }
+  ledgerRows.innerHTML = facts.map(f => `
+    <div class="ledger-row">
+      <div>
+        <div class="lkey">${f.key}</div>
+        <div class="lval">${f.val}</div>
+      </div>
+      <button class="ledit">Revise</button>
+    </div>
+  `).join('');
+}
+
+// Start state
+reset();
+</script>
+
+</body>
+</html>

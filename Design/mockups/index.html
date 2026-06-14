@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Paytm Money · Maya — Affluent UI mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:        #0A1628;
+  --navy-2:      #142239;
+  --navy-3:      #1B2A45;
+  --cream:       #F7F2EA;
+  --cream-2:     #EFE7D6;
+  --hairline:    #E6DECF;
+  --hairline-2:  #D8CFBC;
+  --champagne:   #C9A961;
+  --champagne-2: #B89548;
+  --green:       #3D7C57;
+  --ink:         #1A1F2E;
+  --ink-mute:    #6B6356;
+  --ink-soft:    #4A4538;
+  --on-dark:     #F7F2EA;
+  --on-dark-mute:#8C97AB;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #161E2E;
+  color: var(--on-dark);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page-head {
+  padding: 64px 40px 0;
+  text-align: center;
+}
+.page-head h1 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 40px; letter-spacing: -0.02em;
+}
+.page-head p {
+  color: var(--on-dark-mute); margin-top: 12px;
+  font-size: 14px; letter-spacing: 0.02em;
+}
+.page-head .meta {
+  margin-top: 16px; font-size: 12px; color: var(--champagne);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+
+.board {
+  padding: 56px 40px 80px;
+  display: grid;
+  grid-template-columns: repeat(3, 390px);
+  gap: 80px 60px;
+  justify-content: center;
+}
+
+.cell { display: flex; flex-direction: column; align-items: center; }
+.frame-label {
+  text-align: center;
+  font-size: 12px; color: var(--on-dark-mute);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  margin-top: 20px;
+}
+.frame-label .num { color: var(--champagne); font-weight: 500; margin-right: 8px; }
+
+/* ============ Phone frame ============ */
+.frame {
+  width: 390px; height: 844px;
+  border-radius: 44px;
+  background: var(--navy);
+  box-shadow:
+    0 50px 100px -20px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 0 0 1px rgba(255,255,255,0.02);
+  overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+
+/* ============ Screen layout ============ */
+.screen {
+  flex: 1;
+  display: flex; flex-direction: column;
+  padding: 56px 24px 56px;
+  position: relative;
+  background: var(--navy);
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(155, 175, 220, 0.06), transparent 50%);
+}
+
+.brand {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.brand-mark {
+  font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em;
+  color: var(--cream); font-weight: 500;
+}
+.brand-mark em { font-style: normal; color: var(--champagne); }
+.brand-meta { font-size: 11px; color: var(--on-dark-mute); letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* Stage rail at bottom */
+.rail {
+  position: absolute;
+  bottom: 22px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px;
+}
+.rail .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(247,242,234,0.16); }
+.rail .dot.done { background: rgba(201,169,97,0.5); }
+.rail .dot.active { background: var(--champagne); width: 18px; border-radius: 999px; }
+
+/* ============ Orb ============ */
+.orb-wrap { display: flex; justify-content: center; padding: 8px 0 0; }
+.orb {
+  width: 96px; height: 96px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%,
+    #7889A8 0%, #3A4866 35%, #1B2A45 75%);
+  position: relative;
+  box-shadow:
+    0 0 60px 8px rgba(155, 175, 220, 0.20),
+    0 0 120px 20px rgba(155, 175, 220, 0.08),
+    inset 0 -10px 24px rgba(0,0,0,0.32),
+    inset 0 6px 12px rgba(255,255,255,0.08);
+  animation: orb-pulse 3.6s ease-in-out infinite;
+}
+.orb.lg { width: 156px; height: 156px; }
+.orb.sm { width: 64px; height: 64px; box-shadow:
+    0 0 36px 6px rgba(155, 175, 220, 0.16),
+    0 0 70px 12px rgba(155, 175, 220, 0.06),
+    inset 0 -6px 14px rgba(0,0,0,0.32),
+    inset 0 4px 8px rgba(255,255,255,0.08); }
+.orb.talking {
+  background: radial-gradient(circle at 35% 30%,
+    #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  box-shadow:
+    0 0 80px 10px rgba(201, 169, 97, 0.35),
+    0 0 160px 30px rgba(201, 169, 97, 0.15),
+    inset 0 -10px 24px rgba(80,50,10,0.4),
+    inset 0 6px 12px rgba(255,240,210,0.16);
+}
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+
+/* ============ Cream cards ============ */
+.card {
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 24px;
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.card.tight { padding: 22px; }
+.card .eyebrow {
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-mute);
+  margin-bottom: 12px;
+}
+.card h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 30px; letter-spacing: -0.015em;
+  line-height: 1.12;
+}
+.card h2.xl { font-size: 44px; letter-spacing: -0.02em; }
+.card h2.xxl { font-size: 56px; letter-spacing: -0.025em; }
+.card .lede {
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 14px; line-height: 1.55;
+}
+.card .micro {
+  margin-top: 18px;
+  color: var(--ink-mute);
+  font-size: 12px; letter-spacing: 0.04em;
+}
+
+/* ============ Buttons / CTAs ============ */
+.cta {
+  display: block; width: 100%; text-align: center;
+  background: var(--champagne); color: #1A1610;
+  font-family: var(--sans); font-weight: 500;
+  font-size: 15px; letter-spacing: 0.02em;
+  padding: 17px 20px; border: none; border-radius: 999px;
+  cursor: pointer;
+}
+.cta.dark { background: #1A1F2E; color: var(--cream); }
+.cta.ghost {
+  background: transparent; color: var(--cream);
+  border: 1px solid rgba(247,242,234,0.18);
+}
+.cta + .cta { margin-top: 10px; }
+
+/* ============ Rows & lists ============ */
+.rows { margin-top: 16px; }
+.row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 14px;
+}
+.row:last-child { border-bottom: none; }
+.row .label { color: var(--ink-soft); }
+.row .value { font-feature-settings: 'tnum'; font-weight: 500; color: var(--ink); }
+.row.total {
+  border-top: 1px solid var(--ink); border-bottom: none;
+  margin-top: 14px; padding-top: 16px;
+}
+.row.total .label { color: var(--ink); font-weight: 500; }
+.row.total .value { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--champagne-2); }
+
+/* ============ Avatar pills ============ */
+.family-row {
+  display: flex; gap: 10px; margin-top: 18px;
+  align-items: center;
+}
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--cream-2);
+  border: 1px solid var(--hairline-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); color: var(--ink-soft);
+  font-size: 16px;
+}
+.avatar.kid { width: 38px; height: 38px; font-size: 13px; }
+
+/* ============ Ratios ============ */
+.ratio { margin-top: 20px; }
+.ratio + .ratio { margin-top: 22px; }
+.ratio .ratio-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.ratio .ratio-name { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.02em; }
+.ratio .ratio-val { font-family: var(--serif); font-size: 22px; color: var(--ink); letter-spacing: -0.01em; }
+.ratio .ratio-val small { font-family: var(--sans); font-size: 11px; color: var(--green); margin-left: 6px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.bar {
+  margin-top: 10px;
+  height: 6px; background: var(--cream-2);
+  border-radius: 999px; position: relative; overflow: visible;
+}
+.bar .fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--champagne) 0%, var(--champagne-2) 100%);
+}
+.bar .fill.green {
+  background: linear-gradient(90deg, #5FA67E 0%, var(--green) 100%);
+}
+.bar .marker {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--cream); border: 2px solid var(--ink);
+}
+.bar-scale {
+  display: flex; justify-content: space-between;
+  margin-top: 8px; font-size: 10px; color: var(--ink-mute);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* ============ Goal tiles ============ */
+.goal-tile {
+  background: var(--cream); color: var(--ink);
+  border-radius: 20px; padding: 22px;
+  display: flex; align-items: center; gap: 18px;
+}
+.goal-tile + .goal-tile { margin-top: 12px; }
+.goal-tile .icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(145deg, #FBF5E8, var(--cream-2));
+  border: 1px solid var(--hairline-2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.goal-tile .icon svg { width: 28px; height: 28px; stroke: var(--champagne-2); fill: none; stroke-width: 1.4; }
+.goal-tile .meta { flex: 1; }
+.goal-tile .meta .name { font-family: var(--serif); font-size: 18px; letter-spacing: -0.01em; }
+.goal-tile .meta .target { font-size: 12px; color: var(--ink-mute); margin-top: 2px; letter-spacing: 0.04em; }
+.goal-tile .arrow { font-size: 18px; color: var(--ink-mute); }
+
+/* ============ Consent sheets (sit at bottom of screen) ============ */
+.sheet {
+  margin-top: auto;
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 28px 28px 0 0;
+  padding: 30px 26px 32px;
+  position: relative;
+  box-shadow: 0 -30px 60px -20px rgba(0,0,0,0.4);
+}
+.sheet.white { background: #FFFFFF; }
+.sheet .grabber {
+  width: 36px; height: 4px; background: #D5C9B0;
+  border-radius: 999px; margin: -10px auto 18px;
+}
+.sheet.white .grabber { background: #DDD; }
+.sheet .logo-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.sheet .logo-mfc {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #7A4FB8 0%, #5A2FA0 100%);
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-weight: 600;
+}
+.sheet .logo-name { font-family: var(--serif); font-size: 18px; }
+.sheet .logo-name small { display: block; font-family: var(--sans); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+.sheet h3 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 24px; letter-spacing: -0.015em; line-height: 1.2;
+}
+.sheet h3.center { text-align: center; }
+.sheet .trust {
+  list-style: none; margin-top: 16px;
+}
+.sheet .trust li {
+  font-size: 12.5px; color: var(--ink-soft);
+  padding-left: 22px; position: relative;
+  margin-bottom: 8px; line-height: 1.4;
+}
+.sheet .trust li::before {
+  content: ""; position: absolute; left: 0; top: 6px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--green);
+  background-image: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 60%);
+}
+.otp-boxes {
+  display: flex; gap: 8px; justify-content: center;
+  margin: 18px 0 4px;
+}
+.otp-boxes div {
+  width: 40px; height: 48px; border: 1px solid var(--hairline-2);
+  border-radius: 8px; background: var(--cream);
+}
+.otp-boxes div:first-child { border-color: var(--ink); }
+
+.aa-footer {
+  text-align: center; margin-top: 14px;
+  font-size: 10px; color: var(--ink-mute);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.aa-footer strong { color: var(--ink-soft); letter-spacing: 0.16em; }
+
+/* ============ Charts (SVG) ============ */
+.chart-wrap { margin-top: 18px; }
+
+/* ============ Fund picker rows ============ */
+.fund {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--hairline);
+}
+.fund:last-child { border-bottom: none; }
+.fund .name {
+  font-family: var(--serif); font-size: 15px; letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.fund .name small {
+  display: block; font-family: var(--sans);
+  font-size: 11px; color: var(--ink-mute);
+  margin-top: 2px; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.fund .amt {
+  font-feature-settings: 'tnum';
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--champagne-2);
+}
+
+/* ============ Misc helpers ============ */
+.center { text-align: center; }
+.mt-a { margin-top: auto; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.sub-on-dark { color: var(--on-dark-mute); font-size: 13px; line-height: 1.5; letter-spacing: 0.01em; }
+.lead-on-dark {
+  font-family: var(--serif);
+  font-size: 30px; letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--cream);
+  text-align: center;
+}
+
+.check {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--green); color: white;
+  vertical-align: middle; margin-left: 8px;
+  font-size: 14px;
+}
+
+.value-card-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;
+}
+.value-card-row .mini {
+  background: var(--cream-2); border-radius: 14px; padding: 14px;
+}
+.value-card-row .mini .k { font-size: 10px; color: var(--ink-mute); letter-spacing: 0.14em; text-transform: uppercase; }
+.value-card-row .mini .v { margin-top: 6px; font-family: var(--serif); font-size: 18px; }
+
+.badge {
+  display: inline-block;
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(61, 124, 87, 0.12); color: var(--green); font-weight: 600;
+}
+.badge.warn { background: rgba(201, 169, 97, 0.14); color: var(--champagne-2); }
+
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>Paytm <em style="font-style: italic; color: var(--champagne);">Money</em> · Maya</h1>
+  <p>Affluent UI mockup — hybrid direction (deep navy chrome · warm cream cards · champagne accent · serif display)</p>
+  <p class="meta">12 screens · Rakshit · mock data</p>
+</div>
+
+<div class="board">
+
+<!-- =========== 01 · Splash =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Wealth · Beta</span>
+    </div>
+
+    <div class="orb-wrap" style="margin-top: 96px;"><div class="orb lg talking"></div></div>
+
+    <div style="margin-top: 48px; padding: 0 8px;">
+      <p class="lead-on-dark">Meet Maya,<br/>your private<br/>wealth advisor.</p>
+      <p class="sub-on-dark center" style="margin-top: 16px;">
+        Ten minutes. One conversation.<br/>A plan you can act on today.
+      </p>
+    </div>
+
+    <div class="mt-a">
+      <button class="cta">Start with Maya</button>
+      <button class="cta ghost mt-12">How does this work?</button>
+    </div>
+
+    <div class="rail">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">01</span>Splash</div>
+</div>
+
+<!-- =========== 02 · Risk profile =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 1 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb"></div></div>
+
+    <div class="card" style="margin-top: 28px;">
+      <div class="eyebrow">Your risk profile</div>
+      <h2 class="xl">Aggressive <span class="check">✓</span></h2>
+      <p class="lede">You're comfortable holding through downturns — and likely to top up when others sell. That earns you a long-horizon, equity-tilted plan.</p>
+
+      <div class="value-card-row">
+        <div class="mini"><div class="k">Equity tilt</div><div class="v">75 %</div></div>
+        <div class="mini"><div class="k">Expected return</div><div class="v">13 % p.a.</div></div>
+      </div>
+    </div>
+
+    <p class="sub-on-dark center mt-24">Maya is asking about your family next.</p>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">02</span>Risk profile</div>
+</div>
+
+<!-- =========== 03 · Family =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 2 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div class="card" style="margin-top: 28px;">
+      <div class="eyebrow">Who we're planning for</div>
+      <h2>Rakshit &amp; Priya,<br/>with two children.</h2>
+
+      <div class="family-row">
+        <div class="avatar">R</div>
+        <div class="avatar">P</div>
+        <div class="avatar kid">A · 7</div>
+        <div class="avatar kid">N · 3</div>
+      </div>
+
+      <p class="lede" style="margin-top: 20px;">Maya will weight education and long-term family goals in your plan. Both children's horizons are baked into the math.</p>
+    </div>
+
+    <p class="sub-on-dark center mt-24">Next: a one-tap pull from MF Central.</p>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">03</span>Family</div>
+</div>
+
+<!-- =========== 04 · MF Central consent =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen" style="padding-bottom: 0;">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 3 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm talking"></div></div>
+
+    <p class="lead-on-dark" style="margin-top: 28px;">Let's pull your<br/>portfolio in 10 seconds.</p>
+    <p class="sub-on-dark center mt-12">Maya needs MF Central, just once.</p>
+
+    <div class="sheet">
+      <div class="grabber"></div>
+      <div class="logo-row">
+        <div class="logo-mfc">m</div>
+        <div class="logo-name">MF Central<small>Portfolio · read-only</small></div>
+      </div>
+      <h3>Fetching for: <em style="color: var(--champagne-2); font-style: normal;">Personal Finance Management</em></h3>
+      <ul class="trust">
+        <li>End-to-end encrypted, OTP-verified by you.</li>
+        <li>One-time consent · valid for this session only.</li>
+        <li>We never store your OTP or login.</li>
+      </ul>
+      <button class="cta" style="margin-top: 18px;">Authenticate with OTP</button>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">04</span>MF Central consent</div>
+</div>
+
+<!-- =========== 05 · AA consent (Finvu) =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen" style="padding-bottom: 0;">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 4 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm talking"></div></div>
+
+    <p class="lead-on-dark" style="margin-top: 28px;">Next, your income<br/>and assets.</p>
+    <p class="sub-on-dark center mt-12">Securely, via Account Aggregator.</p>
+
+    <div class="sheet white">
+      <div class="grabber"></div>
+      <h3 class="center" style="font-size: 26px;">let's verify your<br/>mobile number</h3>
+      <p style="text-align: center; color: var(--ink-mute); font-size: 12px; margin-top: 12px; line-height: 1.5;">
+        to securely fetch the bank accounts<br/>linked to this number via <u>Account Aggregator</u>
+      </p>
+      <p style="text-align: center; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin-top: 18px;">OTP sent to</p>
+      <p style="text-align: center; font-family: var(--serif); font-size: 18px; margin-top: 4px;">+91 8527 379 520 ✎</p>
+      <div class="otp-boxes">
+        <div></div><div></div><div></div><div></div><div></div><div></div>
+      </div>
+      <button class="cta dark" style="margin-top: 22px;">Continue →</button>
+      <div class="aa-footer">powered by <strong>RBI-regulated AA</strong> · Finvu</div>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">05</span>Account Aggregator consent</div>
+</div>
+
+<!-- =========== 06 · Income & expenses =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 5 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div class="card" style="margin-top: 24px;">
+      <div class="eyebrow">Your monthly snapshot</div>
+      <h2>What flows in,<br/>what flows out.</h2>
+
+      <div class="rows">
+        <div class="row"><span class="label">Household income</span><span class="value">₹ 2,50,000</span></div>
+        <div class="row"><span class="label">Discretionary spend</span><span class="value">₹ 1,00,000</span></div>
+        <div class="row"><span class="label">Necessary spend</span><span class="value">₹ 50,000</span></div>
+        <div class="row"><span class="label">Insurance premium</span><span class="value">₹ 2,000</span></div>
+        <div class="row"><span class="label">EMIs</span><span class="value">₹ 1,000</span></div>
+        <div class="row total"><span class="label">Total outflow</span><span class="value">₹ 1,53,000</span></div>
+      </div>
+    </div>
+
+    <p class="sub-on-dark center mt-24">Maya is computing your savings posture.</p>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">06</span>Income &amp; expenses</div>
+</div>
+
+<!-- =========== 07 · Ratios =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 5 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div class="card" style="margin-top: 24px;">
+      <div class="eyebrow">Your financial posture</div>
+      <h2>Healthy across<br/>the board.</h2>
+
+      <div class="ratio">
+        <div class="ratio-head">
+          <span class="ratio-name">Savings rate</span>
+          <span class="ratio-val">39 %<small>Good</small></span>
+        </div>
+        <div class="bar">
+          <div class="fill green" style="width: 78%;"></div>
+          <div class="marker" style="left: 78%;"></div>
+        </div>
+        <div class="bar-scale"><span>Low</span><span>Healthy</span><span>Strong</span></div>
+      </div>
+
+      <div class="ratio">
+        <div class="ratio-head">
+          <span class="ratio-name">Debt-to-income</span>
+          <span class="ratio-val">10 %<small>Low</small></span>
+        </div>
+        <div class="bar">
+          <div class="fill green" style="width: 20%;"></div>
+          <div class="marker" style="left: 20%;"></div>
+        </div>
+        <div class="bar-scale"><span>Comfortable</span><span>Watch</span><span>High</span></div>
+      </div>
+
+      <p class="micro">You have ₹ 43,000/month in idle surplus. Maya will route this toward your goals.</p>
+    </div>
+
+    <p class="sub-on-dark center mt-24">Great job, Rakshit. Onto goals.</p>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">07</span>Ratios</div>
+</div>
+
+<!-- =========== 08 · Goals picker =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 6 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div style="padding: 24px 4px 12px;">
+      <div class="eyebrow" style="color: var(--on-dark-mute); margin-bottom: 10px;">Your three priorities</div>
+      <p class="lead-on-dark" style="text-align: left; font-size: 26px;">Where are we<br/>heading?</p>
+    </div>
+
+    <div class="goal-tile">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M3 11 L12 4 L21 11 V21 H3 Z"/><path d="M10 21 V14 H14 V21"/></svg>
+      </div>
+      <div class="meta"><div class="name">A home in Pune</div><div class="target">₹ 2.5 Cr · 12 years · 7% inflation</div></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="goal-tile">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9 L12 4 L21 9 L12 14 Z"/><path d="M7 11 V16 C7 16 9 18 12 18 C15 18 17 16 17 16 V11"/></svg>
+      </div>
+      <div class="meta"><div class="name">Aanya's education</div><div class="target">₹ 50 L · 15 years · 10% inflation</div></div>
+      <div class="arrow">›</div>
+    </div>
+    <div class="goal-tile">
+      <div class="icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3"/><path d="M5 21 C5 17 8 15 12 15 C16 15 19 17 19 21"/></svg>
+      </div>
+      <div class="meta"><div class="name">Retirement at 60</div><div class="target">₹ 3 Cr · 32 years · 6% inflation</div></div>
+      <div class="arrow">›</div>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">08</span>Goals picker</div>
+</div>
+
+<!-- =========== 09 · Goal detail (Home) =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Goal · Home</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div class="card" style="margin-top: 24px;">
+      <div class="eyebrow">A home in Pune · 2038</div>
+      <h2 class="xl">₹ 2.5 Cr</h2>
+      <p class="lede">Property prices in Pune compound at ~7% a year. A ₹1.1 Cr home today will cost ₹2.5 Cr by 2038.</p>
+
+      <svg class="chart-wrap" viewBox="0 0 320 160" style="width: 100%; height: 140px;">
+        <defs>
+          <linearGradient id="curveFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#C9A961" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#C9A961" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="150" x2="320" y2="150" stroke="#D8CFBC" stroke-width="1"/>
+        <line x1="0" y1="100" x2="320" y2="100" stroke="#E6DECF" stroke-width="1" stroke-dasharray="3 4"/>
+        <line x1="0" y1="50" x2="320" y2="50" stroke="#E6DECF" stroke-width="1" stroke-dasharray="3 4"/>
+        <path d="M 0 130 Q 100 125 160 100 T 320 18 L 320 150 L 0 150 Z" fill="url(#curveFill)"/>
+        <path d="M 0 130 Q 100 125 160 100 T 320 18" stroke="#B89548" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="0" cy="130" r="4" fill="#1A1F2E"/>
+        <circle cx="320" cy="18" r="5" fill="#C9A961"/>
+        <text x="6" y="142" font-family="Inter" font-size="9" fill="#6B6356" letter-spacing="0.5">2026 · ₹1.1 Cr</text>
+        <text x="262" y="14" font-family="Fraunces" font-size="11" fill="#1A1F2E">₹2.5 Cr</text>
+      </svg>
+
+      <div class="value-card-row">
+        <div class="mini"><div class="k">Today</div><div class="v">₹ 1.1 Cr</div></div>
+        <div class="mini"><div class="k">In 12 years</div><div class="v">₹ 2.5 Cr</div></div>
+      </div>
+    </div>
+
+    <p class="sub-on-dark center mt-24">Maya will attach an investment plan next.</p>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">09</span>Goal detail · Home</div>
+</div>
+
+<!-- =========== 10 · Plan summary (hero) =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 8 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm"></div></div>
+
+    <div class="card" style="margin-top: 22px;">
+      <div class="eyebrow">Your monthly SIP, all goals</div>
+      <h2 class="xxl" style="color: var(--champagne-2);">₹ 50,000</h2>
+      <p style="font-size: 13px; color: var(--ink-mute); margin-top: 6px; letter-spacing: 0.04em;">
+        Aggressive · Long horizon · 3-phase glide
+      </p>
+
+      <svg class="chart-wrap" viewBox="0 0 320 130" style="width: 100%; height: 120px;">
+        <defs>
+          <linearGradient id="equity" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#C9A961" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#B89548" stop-opacity="0.7"/>
+          </linearGradient>
+          <linearGradient id="debt" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#3D7C57" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#2E5E42" stop-opacity="0.6"/>
+          </linearGradient>
+        </defs>
+        <!-- baseline -->
+        <line x1="0" y1="120" x2="320" y2="120" stroke="#D8CFBC" stroke-width="1"/>
+        <!-- P1: 80% equity, 15% debt, 5% gold -->
+        <path d="M 0 120 L 0 24 L 106 36 L 106 120 Z" fill="url(#equity)"/>
+        <path d="M 0 24 L 0 12 L 106 16 L 106 36 Z" fill="#1A1F2E" opacity="0.5"/>
+        <!-- P2: 50% equity glide -->
+        <path d="M 106 120 L 106 36 L 213 70 L 213 120 Z" fill="url(#equity)"/>
+        <path d="M 106 36 L 106 16 L 213 28 L 213 70 Z" fill="url(#debt)"/>
+        <!-- P3: 20% equity -->
+        <path d="M 213 120 L 213 70 L 320 108 L 320 120 Z" fill="url(#equity)"/>
+        <path d="M 213 70 L 213 28 L 320 22 L 320 108 Z" fill="url(#debt)"/>
+        <!-- phase dividers -->
+        <line x1="106" y1="12" x2="106" y2="120" stroke="#F7F2EA" stroke-width="1.5"/>
+        <line x1="213" y1="12" x2="213" y2="120" stroke="#F7F2EA" stroke-width="1.5"/>
+        <text x="40" y="138" font-family="Inter" font-size="9" fill="#6B6356" letter-spacing="0.5">P1 · 0–10y</text>
+        <text x="142" y="138" font-family="Inter" font-size="9" fill="#6B6356" letter-spacing="0.5">P2 · 10–24y</text>
+        <text x="248" y="138" font-family="Inter" font-size="9" fill="#6B6356" letter-spacing="0.5">P3 · 24–32y</text>
+      </svg>
+
+      <div class="rows" style="margin-top: 22px;">
+        <div class="row"><span class="label">Home in Pune</span><span class="value">₹ 18,500</span></div>
+        <div class="row"><span class="label">Aanya's education</span><span class="value">₹ 9,500</span></div>
+        <div class="row"><span class="label">Retirement</span><span class="value">₹ 22,000</span></div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">10</span>Plan summary</div>
+</div>
+
+<!-- =========== 11 · Funds picker (bottom sheet) =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen" style="padding-bottom: 0;">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 8 of 9</span>
+    </div>
+    <div class="orb-wrap"><div class="orb sm talking"></div></div>
+
+    <p class="lead-on-dark" style="margin-top: 24px;">Four funds.<br/>Diversified, low-cost.</p>
+    <p class="sub-on-dark center mt-12">Maya picked these against your phase glide.</p>
+
+    <div class="sheet">
+      <div class="grabber"></div>
+      <div class="eyebrow" style="color: var(--ink-mute);">Suggested funds · monthly SIP</div>
+
+      <div class="fund">
+        <div class="name">Parag Parikh Flexi Cap<small>Equity · Flexi cap</small></div>
+        <div class="amt">₹ 18,000</div>
+      </div>
+      <div class="fund">
+        <div class="name">Mirae Asset Large Cap<small>Equity · Large cap</small></div>
+        <div class="amt">₹ 12,000</div>
+      </div>
+      <div class="fund">
+        <div class="name">HDFC Short Duration<small>Debt · Short-term</small></div>
+        <div class="amt">₹ 12,500</div>
+      </div>
+      <div class="fund">
+        <div class="name">Nippon Gold ETF FoF<small>Gold · Hedge</small></div>
+        <div class="amt">₹ 7,500</div>
+      </div>
+
+      <div class="row total" style="border-top-color: var(--hairline-2);">
+        <span class="label">Total monthly SIP</span>
+        <span class="value">₹ 50,000</span>
+      </div>
+
+      <button class="cta" style="margin-top: 20px;">Proceed to invest</button>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">11</span>Funds picker</div>
+</div>
+
+<!-- =========== 12 · Plan ready =========== -->
+<div class="cell">
+  <div class="frame"><div class="screen">
+    <div class="brand">
+      <span class="brand-mark">Paytm <em>Money</em></span>
+      <span class="brand-meta">Stage 9 of 9</span>
+    </div>
+    <div class="orb-wrap" style="margin-top: 64px;"><div class="orb lg"></div></div>
+
+    <div style="margin-top: 40px;">
+      <p class="lead-on-dark">Your wealth plan<br/>is ready.</p>
+      <p class="sub-on-dark center mt-12">
+        10 pages · your goals, gap analysis,<br/>and 4-fund SIP basket.
+      </p>
+    </div>
+
+    <div class="card tight" style="margin-top: 32px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 44px; height: 56px; background: #fff; border: 1px solid var(--hairline-2); border-radius: 6px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; font-family: var(--serif); font-size: 10px; color: var(--ink-mute);">PDF</div>
+      <div style="flex: 1;">
+        <div style="font-family: var(--serif); font-size: 15px;">plan_rakshit_2026-06.pdf</div>
+        <div style="font-size: 11px; color: var(--ink-mute); margin-top: 2px; letter-spacing: 0.04em;">Signed by Maya · valid 30 days</div>
+      </div>
+    </div>
+
+    <div class="mt-a">
+      <button class="cta">Download plan</button>
+      <button class="cta ghost mt-12">Schedule a review in 6 months</button>
+    </div>
+
+    <div class="rail">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div>
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    </div>
+  </div></div>
+  <div class="frame-label"><span class="num">12</span>Plan ready</div>
+</div>
+
+</div> <!-- /board -->
+
+</body>
+</html>

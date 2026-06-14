@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Maya · orb travel + revision peek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:        #0A1628;
+  --navy-2:      #142239;
+  --cream:       #F7F2EA;
+  --cream-2:     #EFE7D6;
+  --hairline:    #E6DECF;
+  --hairline-2:  #D8CFBC;
+  --champagne:   #C9A961;
+  --champagne-2: #B89548;
+  --green:       #3D7C57;
+  --ink:         #1A1F2E;
+  --ink-mute:    #6B6356;
+  --ink-soft:    #4A4538;
+  --on-dark:     #F7F2EA;
+  --on-dark-mute:#8C97AB;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #161E2E; color: var(--on-dark);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 56px 24px;
+}
+h1 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 28px; letter-spacing: -0.02em; margin-bottom: 8px;
+}
+.sub { color: var(--on-dark-mute); font-size: 13px; max-width: 480px; text-align: center; line-height: 1.5; }
+
+/* Phone */
+.phone {
+  width: 390px; height: 844px;
+  border-radius: 44px;
+  background: var(--navy);
+  background-image: radial-gradient(circle at 50% -10%, rgba(155,175,220,0.06), transparent 50%);
+  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+  position: relative;
+  margin-top: 32px;
+}
+
+.brand {
+  position: absolute; top: 56px; left: 24px; right: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 4;
+}
+.brand-mark { font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--cream); font-weight: 500; }
+.brand-mark em { font-style: italic; color: var(--champagne); }
+.brand-meta { font-size: 11px; color: var(--on-dark-mute); letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* ============ The Orb (singleton) ============ */
+.orb {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 156px; height: 156px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) translateY(var(--orb-y, -180px)) scale(var(--orb-scale, 1));
+  transition:
+    transform 700ms var(--ease),
+    background 700ms var(--ease),
+    box-shadow 700ms var(--ease);
+  z-index: 3;
+  background: radial-gradient(circle at 35% 30%, #7889A8 0%, #3A4866 35%, #1B2A45 75%);
+  box-shadow:
+    0 0 calc(60px * var(--orb-glow, 1)) calc(8px * var(--orb-glow, 1)) rgba(155,175,220,0.20),
+    0 0 calc(120px * var(--orb-glow, 1)) calc(20px * var(--orb-glow, 1)) rgba(155,175,220,0.08),
+    inset 0 -10px 24px rgba(0,0,0,0.32),
+    inset 0 6px 12px rgba(255,255,255,0.08);
+  animation: orb-pulse 3.6s ease-in-out infinite;
+}
+.orb.talking {
+  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  box-shadow:
+    0 0 calc(80px * var(--orb-glow, 1)) calc(10px * var(--orb-glow, 1)) rgba(201,169,97,0.35),
+    0 0 calc(160px * var(--orb-glow, 1)) calc(30px * var(--orb-glow, 1)) rgba(201,169,97,0.15),
+    inset 0 -10px 24px rgba(80,50,10,0.4),
+    inset 0 6px 12px rgba(255,240,210,0.16);
+}
+@keyframes orb-pulse {
+  0%, 100% { box-shadow: inherit; }
+  50% { filter: brightness(1.04); }
+}
+
+/* ============ Card slot ============ */
+.slot {
+  position: absolute;
+  left: 24px; right: 24px;
+  top: var(--slot-top, 320px);
+  z-index: 2;
+  transition: top 700ms var(--ease);
+}
+.lead-on-dark {
+  font-family: var(--serif); font-size: 28px; letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--cream); text-align: center;
+}
+.sub-on-dark { color: var(--on-dark-mute); font-size: 13px; line-height: 1.5; text-align: center; }
+
+.card {
+  background: var(--cream); color: var(--ink);
+  border-radius: 24px; padding: 26px;
+}
+.card .eyebrow {
+  font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-mute);
+  margin-bottom: 12px;
+}
+.card h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 30px; letter-spacing: -0.015em;
+  line-height: 1.12;
+}
+.card h2.xl { font-size: 42px; letter-spacing: -0.02em; }
+.card h2.xxl { font-size: 52px; letter-spacing: -0.025em; color: var(--champagne-2); }
+.card .lede {
+  margin-top: 12px; color: var(--ink-soft);
+  font-size: 14px; line-height: 1.5;
+}
+
+.cta {
+  display: block; width: 100%; text-align: center;
+  background: var(--champagne); color: #1A1610;
+  font-family: var(--sans); font-weight: 500;
+  font-size: 15px; letter-spacing: 0.02em;
+  padding: 17px 20px; border: none; border-radius: 999px;
+  cursor: pointer; transition: transform 150ms ease, background 300ms;
+}
+.cta:active { transform: scale(0.98); }
+.cta.ghost { background: transparent; color: var(--cream); border: 1px solid rgba(247,242,234,0.18); }
+.cta + .cta { margin-top: 10px; }
+
+.btm {
+  position: absolute; bottom: 56px; left: 24px; right: 24px;
+  z-index: 2;
+  transition: opacity 400ms var(--ease);
+}
+
+/* Stage rail */
+.rail {
+  position: absolute;
+  bottom: 22px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px;
+  z-index: 4;
+}
+.rail .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(247,242,234,0.16); transition: all 400ms var(--ease); }
+.rail .dot.done { background: rgba(201,169,97,0.5); }
+.rail .dot.active { background: var(--champagne); width: 18px; border-radius: 999px; }
+.rail .dot.flash { animation: rail-flash 1.2s var(--ease); }
+@keyframes rail-flash {
+  0%   { background: rgba(201,169,97,0.5); transform: scale(1); }
+  20%  { background: var(--champagne); transform: scale(1.6); }
+  100% { background: rgba(201,169,97,0.5); transform: scale(1); }
+}
+
+/* Content fades */
+.fadeable {
+  transition: opacity 400ms var(--ease), transform 500ms var(--ease);
+}
+.fadeable.out { opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+/* Toast */
+.toast {
+  position: absolute; top: 96px; left: 50%; transform: translateX(-50%) translateY(-20px);
+  background: rgba(20, 34, 57, 0.96);
+  backdrop-filter: blur(8px);
+  color: var(--cream);
+  border: 1px solid rgba(201,169,97,0.3);
+  padding: 12px 18px; border-radius: 999px;
+  font-size: 12px; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 10px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 400ms var(--ease), transform 500ms var(--ease);
+  z-index: 5; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast .dot-c { width: 6px; height: 6px; border-radius: 50%; background: var(--champagne); }
+.toast em { font-style: normal; color: var(--champagne); }
+
+/* Revision peek overlay */
+.peek {
+  position: absolute; inset: 0;
+  background: rgba(10, 22, 40, 0.5);
+  backdrop-filter: blur(6px);
+  z-index: 6;
+  opacity: 0; pointer-events: none;
+  transition: opacity 300ms var(--ease);
+}
+.peek.show { opacity: 1; pointer-events: auto; }
+.peek-sheet {
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  background: var(--cream); color: var(--ink);
+  border-radius: 24px; padding: 26px;
+  transform: translateY(40px);
+  transition: transform 400ms var(--ease);
+}
+.peek.show .peek-sheet { transform: translateY(0); }
+.peek-sheet .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 10px; }
+.peek-sheet h3 { font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: -0.01em; }
+.peek-sheet input {
+  width: 100%; margin-top: 14px; padding: 12px 14px;
+  border: 1px solid var(--hairline-2); border-radius: 12px;
+  font-family: var(--sans); font-size: 15px; background: white;
+  color: var(--ink);
+}
+.peek-sheet .btns { display: flex; gap: 10px; margin-top: 16px; }
+.peek-sheet .cta { flex: 1; padding: 14px; }
+.peek-sheet .cta.dark { background: #1A1F2E; color: var(--cream); }
+
+/* Controls */
+.controls {
+  margin-top: 32px;
+  display: flex; gap: 12px; align-items: center;
+}
+.controls button {
+  background: rgba(255,255,255,0.08); color: var(--cream);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 12px 18px; border-radius: 999px;
+  font-family: var(--sans); font-size: 13px; cursor: pointer;
+  transition: background 200ms;
+}
+.controls button:hover { background: rgba(255,255,255,0.14); }
+.controls button.primary {
+  background: var(--champagne); color: #1A1610; border-color: transparent; font-weight: 500;
+}
+.controls .stage-label { color: var(--on-dark-mute); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.controls .stage-label strong { color: var(--champagne); letter-spacing: 0.04em; }
+
+.legend {
+  margin-top: 40px; max-width: 480px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 20px;
+  font-size: 13px; line-height: 1.6; color: var(--on-dark-mute);
+}
+.legend strong { color: var(--cream); font-weight: 500; }
+.legend code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>Orb travel + revision peek</h1>
+<p class="sub">Tap "Next stage" to watch the orb travel between hero and header positions. Then tap "Revise family" on stage 7 to see how a backward update is handled without losing your place.</p>
+
+<div class="phone" id="phone">
+  <div class="brand">
+    <span class="brand-mark">Paytm <em>Money</em></span>
+    <span class="brand-meta" id="stageMeta">Stage 0 of 9</span>
+  </div>
+
+  <!-- The singleton orb -->
+  <div class="orb talking" id="orb"></div>
+
+  <!-- Card / content slot -->
+  <div class="slot fadeable" id="slot">
+    <p class="lead-on-dark">Meet Maya,<br/>your private<br/>wealth advisor.</p>
+    <p class="sub-on-dark" style="margin-top: 16px;">Ten minutes. One conversation.<br/>A plan you can act on today.</p>
+  </div>
+
+  <div class="btm fadeable" id="btm">
+    <button class="cta">Start with Maya</button>
+    <button class="cta ghost">How does this work?</button>
+  </div>
+
+  <!-- Toast (revision notification) -->
+  <div class="toast" id="toast">
+    <div class="dot-c"></div>
+    <span>Updated · <em>Family</em>. SIP recomputed.</span>
+  </div>
+
+  <!-- Revision peek -->
+  <div class="peek" id="peek">
+    <div class="peek-sheet">
+      <div class="eyebrow">Edit · your family</div>
+      <h3>How many children?</h3>
+      <input type="text" value="3 children — Aanya (7), Naman (3), Vir (1)" />
+      <div class="btns">
+        <button class="cta ghost dark" onclick="closePeek()">Cancel</button>
+        <button class="cta" onclick="confirmRevise()">Save &amp; recompute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage rail -->
+  <div class="rail" id="rail">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button onclick="prevStage()">← Prev</button>
+  <span class="stage-label">Stage <strong id="stageNum">0</strong> · <span id="stageName">splash</span></span>
+  <button class="primary" onclick="nextStage()">Next stage →</button>
+  <button id="reviseBtn" style="display: none;" onclick="openPeek()">Revise family</button>
+</div>
+
+<div class="legend">
+  <strong>What to watch:</strong> the orb is a <em>single</em> DOM element. Across stages it changes <code>--orb-y</code>, <code>--orb-scale</code>, <code>--orb-glow</code> and its <code>.talking</code> mood class — that's the whole transition. The cards swap behind it.<br/><br/>
+  <strong>On stage 7,</strong> click "Revise family" to see the revision pattern: peek-up edit sheet, then a toast confirming the update and the rail flashing the affected earlier stage. You stay on stage 7 — Maya just acknowledges what changed.
+</div>
+
+<script>
+const stages = [
+  { name: 'Splash',          orb: { y: -210, scale: 1.0, glow: 1.0, mood: 'talking' }, slotTop: 380, content: 'splash' },
+  { name: 'Risk profile',    orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'risk' },
+  { name: 'Family',          orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'family' },
+  { name: 'MF Central',      orb: { y: -340, scale: 0.42, glow: 0.7,  mood: 'talking' }, slotTop: 200, content: 'mfc' },
+  { name: 'AA consent',      orb: { y: -340, scale: 0.42, glow: 0.7,  mood: 'talking' }, slotTop: 200, content: 'aa' },
+  { name: 'Income',          orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'income' },
+  { name: 'Ratios',          orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'ratios' },
+  { name: 'Goals',           orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'goals' },
+  { name: 'Plan summary',    orb: { y: -340, scale: 0.42, glow: 0.55, mood: 'idle' }, slotTop: 200, content: 'plan' },
+  { name: 'Plan ready',      orb: { y: -210, scale: 1.0, glow: 1.0, mood: 'talking' }, slotTop: 380, content: 'ready' },
+];
+
+const contents = {
+  splash: () => ({
+    slot: `<p class="lead-on-dark">Meet Maya,<br/>your private<br/>wealth advisor.</p>
+           <p class="sub-on-dark" style="margin-top: 16px;">Ten minutes. One conversation.<br/>A plan you can act on today.</p>`,
+    btm: `<button class="cta">Start with Maya</button><button class="cta ghost">How does this work?</button>`
+  }),
+  risk: () => ({
+    slot: `<div class="card"><div class="eyebrow">Your risk profile</div>
+           <h2 class="xl">Aggressive ✓</h2>
+           <p class="lede">Equity-tilted, long-horizon — the right shape for your patience and capacity.</p></div>`,
+    btm: ``
+  }),
+  family: () => ({
+    slot: `<div class="card"><div class="eyebrow">Who we're planning for</div>
+           <h2>Rakshit &amp; Priya,<br/>with two children.</h2>
+           <p class="lede">Education and family goals weight your plan.</p></div>`,
+    btm: ``
+  }),
+  mfc: () => ({
+    slot: `<p class="lead-on-dark" style="font-size: 24px;">Let's pull your<br/>portfolio in 10 seconds.</p>
+           <p class="sub-on-dark" style="margin-top: 14px;">Maya needs MF Central, just once.</p>
+           <div class="card" style="margin-top: 20px;">
+             <div class="eyebrow">MF Central · OTP</div>
+             <h2 style="font-size: 22px;">Authenticate to fetch your portfolio</h2>
+             <button class="cta" style="margin-top: 16px;">Authenticate with OTP</button>
+           </div>`,
+    btm: ``
+  }),
+  aa: () => ({
+    slot: `<div class="card" style="background: white;"><div class="eyebrow" style="text-align: center;">OTP sent to</div>
+           <p style="text-align:center; font-family: var(--serif); font-size: 22px;">+91 8527 379 520</p>
+           <p style="text-align: center; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); margin-top: 18px;">powered by RBI-regulated AA · Finvu</p></div>`,
+    btm: ``
+  }),
+  income: () => ({
+    slot: `<div class="card"><div class="eyebrow">Your monthly snapshot</div>
+           <h2>What flows in,<br/>what flows out.</h2>
+           <div style="margin-top: 14px; font-size: 14px; color: var(--ink-soft);">
+             <div style="display:flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--hairline);"><span>Household income</span><span style="font-weight: 500;">₹ 2,50,000</span></div>
+             <div style="display:flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--hairline);"><span>Total outflow</span><span style="font-weight: 500;">₹ 1,53,000</span></div>
+           </div></div>`,
+    btm: ``
+  }),
+  ratios: () => ({
+    slot: `<div class="card"><div class="eyebrow">Your financial posture</div>
+           <h2>Healthy across<br/>the board.</h2>
+           <p class="lede">Savings rate 39%. DTI 10%. ₹43,000/month idle surplus.</p></div>`,
+    btm: ``
+  }),
+  goals: () => ({
+    slot: `<div class="card"><div class="eyebrow">Your three priorities</div>
+           <h2>Where are we<br/>heading?</h2>
+           <p class="lede">Home in Pune · Aanya's education · Retirement at 60.</p></div>`,
+    btm: `<div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(201,169,97,0.2); border-radius: 999px; padding: 12px; text-align: center; font-size: 12px; color: var(--cream);">
+            <span style="color: var(--champagne);">●</span> Say "wait, we have three kids" or
+            <button onclick="openPeek()" style="background:none;border:none;color: var(--champagne); text-decoration: underline; cursor: pointer; font-size: 12px;">tap to revise family</button>
+          </div>`
+  }),
+  plan: () => ({
+    slot: `<div class="card"><div class="eyebrow">Your monthly SIP, all goals</div>
+           <h2 class="xxl" id="sipNumber">₹ 50,000</h2>
+           <p style="font-size: 13px; color: var(--ink-mute); margin-top: 4px;">Aggressive · Long horizon · 3-phase glide</p></div>`,
+    btm: ``
+  }),
+  ready: () => ({
+    slot: `<p class="lead-on-dark">Your wealth plan<br/>is ready.</p>
+           <p class="sub-on-dark" style="margin-top: 14px;">10 pages. Yours to take anywhere.</p>`,
+    btm: `<button class="cta">Download plan</button>`
+  }),
+};
+
+let i = 0;
+const phone = document.getElementById('phone');
+const orb = document.getElementById('orb');
+const slot = document.getElementById('slot');
+const btm = document.getElementById('btm');
+const rail = document.getElementById('rail');
+const stageMeta = document.getElementById('stageMeta');
+const stageNum = document.getElementById('stageNum');
+const stageName = document.getElementById('stageName');
+const reviseBtn = document.getElementById('reviseBtn');
+const toast = document.getElementById('toast');
+const peek = document.getElementById('peek');
+
+function render() {
+  const s = stages[i];
+  // orb
+  phone.style.setProperty('--orb-y', s.orb.y + 'px');
+  phone.style.setProperty('--orb-scale', s.orb.scale);
+  phone.style.setProperty('--orb-glow', s.orb.glow);
+  orb.classList.toggle('talking', s.orb.mood === 'talking');
+
+  // slot position
+  phone.style.setProperty('--slot-top', s.slotTop + 'px');
+
+  // content
+  slot.classList.add('out');
+  btm.classList.add('out');
+  setTimeout(() => {
+    const c = contents[s.content]();
+    slot.innerHTML = c.slot;
+    btm.innerHTML = c.btm;
+    slot.classList.remove('out');
+    btm.classList.remove('out');
+  }, 250);
+
+  // rail
+  Array.from(rail.children).forEach((d, idx) => {
+    d.classList.remove('active', 'done');
+    if (i === 0 || i === stages.length - 1) return;
+    const railIdx = i - 1;
+    if (idx < railIdx) d.classList.add('done');
+    else if (idx === railIdx) d.classList.add('active');
+  });
+
+  // meta
+  stageMeta.textContent = i === 0 ? 'Wealth · Beta'
+    : i === stages.length - 1 ? 'Stage 9 of 9'
+    : `Stage ${i} of 9`;
+  stageNum.textContent = i;
+  stageName.textContent = s.name.toLowerCase();
+
+  // revise button visible on Ratios / Goals (stage 7-ish)
+  reviseBtn.style.display = (s.content === 'goals' || s.content === 'ratios') ? 'inline-block' : 'none';
+}
+
+function nextStage() { i = Math.min(i + 1, stages.length - 1); render(); }
+function prevStage() { i = Math.max(i - 1, 0); render(); }
+
+function openPeek() { peek.classList.add('show'); }
+function closePeek() { peek.classList.remove('show'); }
+function confirmRevise() {
+  closePeek();
+  // flash the family dot (index 1, which corresponds to stage 2 = rail dot 1)
+  const familyDot = rail.children[1];
+  familyDot.classList.add('flash');
+  setTimeout(() => familyDot.classList.remove('flash'), 1300);
+  // toast
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+  // if plan screen is visible, bump the SIP number
+  const sip = document.getElementById('sipNumber');
+  if (sip) {
+    sip.style.transition = 'opacity 300ms';
+    sip.style.opacity = 0;
+    setTimeout(() => {
+      sip.textContent = '₹ 52,000';
+      sip.style.opacity = 1;
+    }, 350);
+  }
+}
+
+render();
+
+// expose handlers in case content re-renders need them
+window.openPeek = openPeek;
+window.closePeek = closePeek;
+window.confirmRevise = confirmRevise;
+</script>
+
+</body>
+</html>

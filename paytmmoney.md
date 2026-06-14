@@ -1,0 +1,192 @@
+# Paytm Money · Maya — Affluent UI Redesign
+
+Interview-ready redesign of the Maya voice agent for Paytm Money's Affluent++ DIY segment. Conversation-first (RM, not IVR): the orb is the experience, artifacts are summoned moments.
+
+**Branch:** `redesign/affluent-ui` off `63b8efd Voice Bot V2`
+**Target user:** Affluent++, DIY product + DIY KYC, knows what they want
+**Stack (unchanged):** React 19 + Vite + FastAPI + Pipecat, mobile-first
+
+---
+
+## Locked decisions
+
+| Decision | Choice |
+|---|---|
+| Branch base | `63b8efd Voice Bot V2` (clean baseline) |
+| Form factor | Mobile-first, centred phone viewport on desktop |
+| Visual register | Hybrid — deep navy chrome + warm cream content cards + champagne accent + serif display (Fraunces) |
+| Interaction model | Conversation-first; orb always centred; cards summoned, not persistent |
+| Stage rail | Removed — replaced by ledger chip top-right |
+| Artifact dismissal | Auto-dismiss on next tool call (deterministic, no LLM coupling) |
+| Pause mid-sentence | Tap orb to pause Maya's TTS; tap again to resume |
+| Artifact source of truth | Backend `core/ui_bus.py` emits `{type:'artifact', kind, data}` events; specific tools call it at confirmed-state moments |
+| Demo mode | None — real voice only |
+| Dependencies | Zero new runtime deps. CSS-only motion, hand-rolled SVG charts |
+| PDF restyling | Out of scope for this branch |
+
+---
+
+## References
+
+### Mockups (build these into React, in this order of fidelity)
+- `Design/mockups/conversation.html` — **the source of truth.** Conversation-first model with orb, summoned artifacts, hero takeover, ledger panel
+- `Design/mockups/transitions.html` — orb travel + revision peek mechanics
+- `Design/mockups/index.html` — earlier 12-screen board (kept for reference; superseded by conversation.html)
+
+### Visual references
+- `Design/refs/Wireframe/` — 12 hand-drawn wireframes (the original locked 9-stage flow)
+- `Design/refs/Screenshots/` — real Paytm Money home, MF Central consent, Finvu AA OTP screens
+
+### Existing code (keep, do not rewrite)
+- `core/finmath.py` — all math, unit-tested
+- `core/session.py` — STATE + progress + next_step gating
+- `core/ui_bus.py` — RTVI event bus (extend with `emit_artifact`)
+- `agent/tools.py` — 12 registered tools (add `emit_artifact` calls in 4 of them)
+- `agent/prompts.py` — Maya's system prompt
+- `bot.py`, `server.py` — Pipecat + FastAPI plumbing
+- `web/src/pcClient.ts`, `pcReact.ts`, `types.ts`, `demoSnapshot.ts`, `format.ts` — Pipecat React plumbing
+
+### Tests (must stay green)
+- `tests/test_finmath.py`, `test_session_flow.py`, `test_tool_guards.py`, `test_tool_call_sequence.py`, `test_account_aggregator_flow.py`, `test_portfolio_plan_contract.py`, `test_gold_plan_eval.py`
+
+---
+
+## Architecture invariants
+
+1. **LLM never computes numbers.** All maths through `core/finmath.py`.
+2. **LLM never knows about UI.** Artifact events emit from tools (post-mutation), not from prompts.
+3. **STATE is single source of truth.** Ledger panel reads `STATE` snapshot directly. No client-side state duplication.
+4. **Tool call order is contract.** `test_tool_call_sequence.py` defines the 12-tool gold path; artifact ordering follows it.
+5. **Auto-dismiss is deterministic.** Next tool call dismisses prior artifact — no timers, no LLM tags.
+
+---
+
+## Build phases — checklist
+
+Mark each item `[x]` as completed. Commit at the end of each phase with message `phase-N: <summary>`.
+
+### Phase 0 — Branch + housekeeping
+- [ ] Verify working tree is clean on `main` at `63b8efd`
+- [ ] Cut branch: `git checkout -b redesign/affluent-ui`
+- [ ] Fix stale `:7860` reference in `bot.py:4`
+- [ ] Commit: `phase-0: branch baseline + comment fix`
+
+### Phase 1 — Design tokens + phone shell
+- [ ] Create `web/src/theme/tokens.ts` (colors, type scale, motion durations, easings)
+- [ ] Create `web/src/theme/fonts.css` (`@font-face` for Fraunces + Inter)
+- [ ] Rewrite `web/src/index.css` (reset, CSS vars from tokens, body bg `#161E2E`)
+- [ ] Create `web/src/components/PhoneFrame.tsx` (390×844 centred viewport, full-bleed on real mobile, navy interior with subtle radial gradient)
+- [ ] Rewrite `web/src/App.tsx` to mount `PhoneFrame` with placeholder content
+- [ ] Verify at `localhost:5173`: dark page, phone frame visible, brand mark rendered
+- [ ] Commit: `phase-1: theme tokens + phone shell`
+
+### Phase 2 — Singleton orb
+- [ ] Create `web/src/components/Orb.tsx` accepting `mood: 'idle' | 'listening' | 'talking' | 'paused'`
+- [ ] CSS: idle (steel-blue radial), listening (cool blue, fast pulse), talking (champagne, slow pulse), paused (dim, no animation)
+- [ ] Mount Orb at app root, centred (translate(-50%, -50%))
+- [ ] Wire to existing Pipecat events from `pcReact`: `bot_started_speaking` → talking; `bot_stopped_speaking` → listening; `user_started_speaking` → listening
+- [ ] Verify: orb breathes; mood swaps when Maya speaks
+- [ ] Commit: `phase-2: singleton orb wired to pipecat events`
+
+### Phase 3 — Conversation shell (subtitle + mic + pause + brand bar + ledger chip)
+- [ ] Create `web/src/components/Subtitle.tsx` (single italic Fraunces line under orb, who/what split)
+- [ ] Create `web/src/components/MicAffordance.tsx` (subtle bottom-centre tap-to-speak; `Tap or just talk` label)
+- [ ] Wire orb tap → pause/resume Maya TTS via Pipecat pipeline
+- [ ] Create `web/src/components/BrandBar.tsx` (Paytm Money mark left + ledger chip placeholder right)
+- [ ] Verify: full empty conversation experience — talk to Maya, see her speak, tap orb to pause, no artifacts yet
+- [ ] Commit: `phase-3: conversation shell with pause + mic`
+
+### Phase 4 — Backend artifact events
+- [ ] Extend `core/ui_bus.py` with `emit_artifact(kind: str, data: dict)` helper
+- [ ] Add `ArtifactKind` enum / Literal type: `risk_reveal`, `family_recap`, `mfc_consent`, `aa_consent`, `income_snapshot`, `ratios`, `inflation_curve`, `sip_split`, `funds_picker`, `plan_hero`
+- [ ] Wire emits in `agent/tools.py`:
+  - [ ] `assess_risk_profile` → `risk_reveal`
+  - [ ] `add_family` → `family_recap`
+  - [ ] `pull_mf_central` → triggers `mfc_consent` *before* (separate path)
+  - [ ] `pull_account_aggregator` → triggers `aa_consent` before, `income_snapshot` + `ratios` after
+  - [ ] `compute_gap_and_sip` → `inflation_curve` (per-goal)
+  - [ ] `build_goal_portfolio` → `sip_split`
+  - [ ] `generate_plan_pdf` → `plan_hero`
+- [ ] Verify in browser console: artifact events stream in deterministic order during a session
+- [ ] All existing tests still green
+- [ ] Commit: `phase-4: artifact events on ui_bus`
+
+### Phase 5 — Artifact slot + summoning
+- [ ] Extend `web/src/types.ts` with `ArtifactEvent` union matching backend
+- [ ] Create `web/src/state/artifactQueue.ts` (single active artifact, queue of pending; next tool call dismisses current)
+- [ ] Create `web/src/components/Artifact.tsx` (cream sheet slides up from bottom, dismiss icon)
+- [ ] Create artifact card components: `RiskRevealCard`, `FamilyRecapCard`, `MfcConsentSheet`, `AaConsentSheet` (white, Finvu-style verbatim copy), `IncomeSnapshotCard`, `RatiosCard`, `InflationCurveCard` (SVG), `SipSplitCard`, `FundsPickerSheet`
+- [ ] Kind → component registry in `web/src/state/artifactRegistry.ts`
+- [ ] On artifact summon: shrink orb to scale 0.55, translate up by ~160px; on dismiss: restore
+- [ ] Verify: full conversation summons real cards at the right moments
+- [ ] Commit: `phase-5: artifact summoning + cards`
+
+### Phase 6 — The hero takeover
+- [ ] Create `web/src/screens/PlanHero.tsx` (full cream takeover, corner champagne orb ring, 84px Fraunces SIP number, dismiss CTA)
+- [ ] Triggered by `plan_hero` artifact kind only
+- [ ] Dismiss returns to orb conversation; ledger now shows complete plan
+- [ ] Verify: the moment lands — orb shrinks to corner, ₹X SIP number takes the screen
+- [ ] Commit: `phase-6: plan hero takeover`
+
+### Phase 7 — Ledger chip + panel
+- [ ] Replace ledger chip placeholder with live `Web/src/components/LedgerChip.tsx` reading STATE snapshot count
+- [ ] Create `web/src/components/LedgerPanel.tsx` (full slide-down from top; lists every confirmed fact from STATE; each row has `Revise` button)
+- [ ] Map STATE fields to ledger rows: Risk profile, Family, Portfolio (MF Central), Income & expenses (AA), Manual assets, Goals (each), SIP plan
+- [ ] Verify: ledger reflects every Maya-confirmed fact; counter updates live
+- [ ] Commit: `phase-7: ledger chip + panel`
+
+### Phase 8 — Revise loop
+- [ ] Wire `Revise <key>` row tap → send synthetic user input via Pipecat (`"I want to update my <key>"`)
+- [ ] Maya catches it conversationally and asks the right follow-up
+- [ ] On state mutation, if downstream computations are affected (income → SIP, risk → glide), emit a `cascade_diff` artifact: toast showing "SIP updated · ₹50,000 → ₹52,000"
+- [ ] Verify: revise from ledger, Maya responds in voice, ledger + plan update
+- [ ] Commit: `phase-8: revise loop with cascade diff toast`
+
+### Phase 9 — Polish
+- [ ] Motion timing pass — every transition feels ≥600ms ease-out, no bounce
+- [ ] Edge: rapid tool call sequence — artifact slides down only if next *would* show; otherwise lingers
+- [ ] Edge: user pauses Maya mid-artifact-summon
+- [ ] Edge: connection drop / reconnect
+- [ ] Visual QA on real mobile (Safari iOS, Chrome Android)
+- [ ] Lighthouse pass: type rendering, no CLS, no layout shift on orb transitions
+- [ ] Commit: `phase-9: polish + edge cases`
+
+---
+
+## Conventions
+
+- **Commit per phase.** One commit message per phase, prefixed `phase-N:`.
+- **Untouched files.** Do not edit `core/finmath.py`, `core/session.py`, `agent/prompts.py`, or any test file. If a change feels needed, stop and ask.
+- **No new dependencies.** Motion is CSS / Web Animations API. Charts are hand-rolled SVG. Fonts come from Google Fonts via `<link>`.
+- **Mobile-first widths.** Build at 390px, validate the desktop centring works at 1440px.
+- **Demoable after every phase.** Open `localhost:5173`, talk to Maya, confirm the demoable state listed in the phase. If you cannot demonstrate it, the phase isn't done.
+
+## Local run
+
+```bash
+# Terminal A — backend
+python server.py
+
+# Terminal B — UI
+cd web && npm run dev
+```
+
+Open `http://localhost:5173`.
+
+---
+
+## Still-open questions (resolve as you build)
+
+1. **Phone frame chrome on desktop** — clean rounded rectangle (current) vs full device mockup (notch + bezel + shadow). Decide before Phase 1.
+2. **Goal tile icons** — line illustrations (champagne stroke on cream) confirmed; revisit if they read too restrained at real size.
+3. **Cascade diff toast persistence** — 3s auto-dismiss vs sticky until tapped. Decide during Phase 8.
+4. **Ledger panel gesture** — tap chip only, or also swipe-down anywhere on screen. Decide during Phase 7.
+
+---
+
+## Definition of done for this branch
+
+- All Phase 0–9 checkboxes ticked.
+- Full Maya session from splash → plan_hero works in browser with real voice.
+- All Python tests green.
+- Conversation feels like an RM, not a wizard, when judged against `Design/mockups/conversation.html`.

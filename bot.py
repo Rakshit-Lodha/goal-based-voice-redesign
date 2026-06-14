@@ -1,7 +1,8 @@
-"""Wealth Expert — Maya. Pipecat pipeline assembly + development runner entrypoint.
+"""Wealth Expert — Maya. Pipecat pipeline assembly.
 
-Run:  python bot.py
-Then open http://localhost:7860/client in the browser and talk.
+Canonical entrypoint is ``server.py`` (FastAPI on :8000). In dev, run the React
+client with ``cd web && npm run dev`` (Vite on :5173) and open
+http://localhost:5173 in the browser.
 """
 
 import functools
