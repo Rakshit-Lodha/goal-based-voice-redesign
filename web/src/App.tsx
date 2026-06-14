@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import { PipecatClientProvider, PipecatClientAudio } from "@pipecat-ai/client-react";
 import { createClient } from "./pcClient";
 import PhoneFrame from "./components/PhoneFrame";
+import Orb from "./components/Orb";
+import { useMood } from "./state/useMood";
 
 export default function App() {
   const client = useMemo(() => createClient(), []);
@@ -11,7 +13,7 @@ export default function App() {
     // distinct from the one we construct though identical at runtime — cast here.
     <PipecatClientProvider client={client as never}>
       <PhoneFrame>
-        <Splash />
+        <Conversation />
       </PhoneFrame>
       {/* Plays Maya's TTS audio coming back from the bot. */}
       <PipecatClientAudio />
@@ -19,38 +21,11 @@ export default function App() {
   );
 }
 
-/** Phase 1 placeholder: brand mark only. Orb arrives in Phase 2. */
-function Splash() {
-  return (
-    <div className="splash">
-      <div className="brand-mark serif">Paytm Money</div>
-      <div className="brand-tag">Wealth Expert</div>
-
-      <style>{`
-        .splash {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 32px;
-        }
-        .brand-mark {
-          font-size: 36px;
-          line-height: 1;
-          letter-spacing: -0.01em;
-          color: var(--ivory);
-          font-variation-settings: "opsz" 36, "wght" 400;
-        }
-        .brand-tag {
-          font-size: 13px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: var(--champagne);
-          font-weight: 500;
-        }
-      `}</style>
-    </div>
-  );
+/**
+ * Phase 2: just the centred orb, mood-driven.
+ * Phase 3 will add subtitle, mic affordance, brand bar around it.
+ */
+function Conversation() {
+  const mood = useMood();
+  return <Orb mood={mood} />;
 }

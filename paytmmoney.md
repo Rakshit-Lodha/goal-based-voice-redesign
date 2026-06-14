@@ -82,12 +82,12 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-1: theme tokens + phone shell`
 
 ### Phase 2 — Singleton orb
-- [ ] Create `web/src/components/Orb.tsx` accepting `mood: 'idle' | 'listening' | 'talking' | 'paused'`
-- [ ] CSS: idle (steel-blue radial), listening (cool blue, fast pulse), talking (champagne, slow pulse), paused (dim, no animation)
-- [ ] Mount Orb at app root, centred (translate(-50%, -50%))
-- [ ] Wire to existing Pipecat events from `pcReact`: `bot_started_speaking` → talking; `bot_stopped_speaking` → listening; `user_started_speaking` → listening
-- [ ] Verify: orb breathes; mood swaps when Maya speaks
-- [ ] Commit: `phase-2: singleton orb wired to pipecat events`
+- [x] Create `web/src/components/Orb.tsx` accepting `mood: 'idle' | 'listening' | 'talking' | 'paused'`
+- [x] CSS: idle (steel-blue radial), listening (cool blue, fast pulse), talking (champagne, slow pulse), paused (dim, no animation)
+- [x] Mount Orb at app root, centred (translate(-50%, -50%))
+- [x] Wire to existing Pipecat events via `useMood` hook: `botStartedSpeaking` → talking; `botStoppedSpeaking` → idle; `userStartedSpeaking` → listening; `userStoppedSpeaking` → idle
+- [x] Verify: orb breathes; mood swaps when Maya speaks
+- [x] Commit: `phase-2: singleton orb wired to pipecat events`
 
 ### Phase 3 — Conversation shell (subtitle + mic + pause + brand bar + ledger chip)
 - [ ] Create `web/src/components/Subtitle.tsx` (single italic Fraunces line under orb, who/what split)
