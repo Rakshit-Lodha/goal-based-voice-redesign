@@ -1,23 +1,24 @@
+import LedgerChip from "./LedgerChip";
+
 /**
  * Top bar inside the phone frame.
  *
  * Left: "Paytm Money" wordmark in Fraunces.
- * Right: ledger chip placeholder — Phase 7 wires the live STATE count.
- *        Disabled in Phase 3 so the visual is right but the surface inert.
+ * Right: live LedgerChip — count of facts Maya has confirmed.
+ *        Pre-conversation (count 0) it renders the dim placeholder;
+ *        once anything is confirmed it activates and opens the panel.
  */
-export default function BrandBar() {
+export default function BrandBar({
+  ledgerCount,
+  onLedgerOpen,
+}: {
+  ledgerCount: number;
+  onLedgerOpen: () => void;
+}) {
   return (
     <header className="brand-bar">
       <div className="wordmark serif">Paytm Money</div>
-      <button
-        type="button"
-        className="ledger-chip"
-        disabled
-        aria-label="Ledger (available once Maya confirms a fact)"
-      >
-        <span className="dot" />
-        <span>Ledger</span>
-      </button>
+      <LedgerChip count={ledgerCount} onClick={onLedgerOpen} />
 
       <style>{`
         .brand-bar {
@@ -39,31 +40,6 @@ export default function BrandBar() {
           color: var(--ivory);
           letter-spacing: 0.005em;
           font-variation-settings: "opsz" 18, "wght" 400;
-        }
-        .ledger-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 12px;
-          border-radius: 999px;
-          border: 1px solid var(--ivory-hairline);
-          background: rgba(245, 237, 219, 0.03);
-          color: var(--ivory-soft);
-          font-family: inherit;
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          opacity: 0.6;
-          cursor: not-allowed;
-          transition: opacity var(--dur-fast) var(--ease-out),
-                      border-color var(--dur-fast) var(--ease-out);
-        }
-        .ledger-chip .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: var(--ivory-soft);
         }
       `}</style>
     </header>

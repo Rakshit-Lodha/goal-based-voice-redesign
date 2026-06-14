@@ -134,11 +134,11 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-6: plan hero takeover`
 
 ### Phase 7 — Ledger chip + panel
-- [ ] Replace ledger chip placeholder with live `Web/src/components/LedgerChip.tsx` reading STATE snapshot count
-- [ ] Create `web/src/components/LedgerPanel.tsx` (full slide-down from top; lists every confirmed fact from STATE; each row has `Revise` button)
-- [ ] Map STATE fields to ledger rows: Risk profile, Family, Portfolio (MF Central), Income & expenses (AA), Manual assets, Goals (each), SIP plan
-- [ ] Verify: ledger reflects every Maya-confirmed fact; counter updates live
-- [ ] Commit: `phase-7: ledger chip + panel`
+- [x] Replace ledger chip placeholder with live `web/src/components/LedgerChip.tsx` reading STATE snapshot count (via `useStateSnapshot`)
+- [x] Create `web/src/components/LedgerPanel.tsx` (slides down from top with scrim; lists every confirmed fact from STATE; each row has `Revise` button)
+- [x] Map STATE fields to ledger rows in `web/src/state/ledgerRows.ts`: Risk profile · Family · Portfolio (MF Central) · Cash flow · EPF·NPS·Stocks · Manual assets · Goals (each) · SIP plan
+- [ ] Verify live: ledger reflects every Maya-confirmed fact; counter updates as the session unfolds (next live walkthrough)
+- [x] Commit: `phase-7: ledger chip + panel`
 
 ### Phase 8 — Revise loop
 - [ ] Wire `Revise <key>` row tap → send synthetic user input via Pipecat (`"I want to update my <key>"`)
@@ -192,7 +192,7 @@ Open `http://localhost:5174` for the redesign.
 1. ~~**Phone frame chrome on desktop**~~ — **resolved Phase 1:** clean rounded rectangle. Full device mockup competes with the orb visually and reads kitsch at the affluent register.
 2. **Goal tile icons** — line illustrations (champagne stroke on cream) confirmed; revisit if they read too restrained at real size.
 3. **Cascade diff toast persistence** — 3s auto-dismiss vs sticky until tapped. Decide during Phase 8.
-4. **Ledger panel gesture** — tap chip only, or also swipe-down anywhere on screen. Decide during Phase 7.
+4. ~~**Ledger panel gesture**~~ — **resolved Phase 7:** tap chip only. Voice-first means hands are free for taps; a swipe-down anywhere would conflict visually with orb tap-to-pause and create accidental panel reveals mid-conversation.
 
 ---
 

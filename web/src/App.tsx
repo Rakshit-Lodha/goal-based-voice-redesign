@@ -10,11 +10,14 @@ import Subtitle from "./components/Subtitle";
 import MicAffordance from "./components/MicAffordance";
 import Artifact from "./components/Artifact";
 import OtpSheet, { type OtpRequest } from "./components/OtpSheet";
+import LedgerPanel from "./components/LedgerPanel";
 import PlanHero from "./screens/PlanHero";
 import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
 import { usePause } from "./state/usePause";
 import { useArtifactQueue } from "./state/artifactQueue";
+import { useStateSnapshot } from "./state/useStateSnapshot";
+import { toLedgerRows } from "./state/ledgerRows";
 import type { OtpRequestEvent, ServerMessage } from "./types";
 
 export default function App() {
@@ -45,6 +48,9 @@ function Conversation() {
   const baseMood = useMood();
   const { isPaused, togglePause } = usePause();
   const { active, queuedCount, dismiss } = useArtifactQueue();
+  const snapshot = useStateSnapshot();
+  const ledgerRows = useMemo(() => toLedgerRows(snapshot), [snapshot]);
+  const [ledgerOpen, setLedgerOpen] = useState(false);
   const [transportState, setTransportState] = useState<TransportState>("disconnected");
   const [dialing, setDialing] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
@@ -102,6 +108,13 @@ function Conversation() {
     await client?.disconnect();
   }, [client]);
 
+  const onRevise = useCallback((key: string) => {
+    // Phase 7 only surfaces the intent — Phase 8 wires the synthetic user
+    // input back to Pipecat so Maya picks it up conversationally.
+    setLedgerOpen(false);
+    console.info("[ledger.revise]", key);
+  }, []);
+
   const submitOtp = useCallback(async (event: FormEvent) => {
     event.preventDefault();
     if (!otp) return;
@@ -129,7 +142,7 @@ function Conversation() {
 
   return (
     <>
-      <BrandBar />
+      <BrandBar ledgerCount={ledgerRows.length} onLedgerOpen={() => setLedgerOpen(true)} />
       <Orb
         mood={mood}
         onTap={togglePause}
@@ -149,6 +162,12 @@ function Conversation() {
         submitting={otpSubmitting}
         onChange={setOtpValue}
         onSubmit={submitOtp}
+      />
+      <LedgerPanel
+        rows={ledgerRows}
+        isOpen={ledgerOpen}
+        onClose={() => setLedgerOpen(false)}
+        onRevise={onRevise}
       />
       {!isHero && (
         <MicAffordance
