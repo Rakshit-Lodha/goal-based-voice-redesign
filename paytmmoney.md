@@ -90,12 +90,12 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-2: singleton orb wired to pipecat events`
 
 ### Phase 3 — Conversation shell (subtitle + mic + pause + brand bar + ledger chip)
-- [ ] Create `web/src/components/Subtitle.tsx` (single italic Fraunces line under orb, who/what split)
-- [ ] Create `web/src/components/MicAffordance.tsx` (subtle bottom-centre tap-to-speak; `Tap or just talk` label)
-- [ ] Wire orb tap → pause/resume Maya TTS via Pipecat pipeline
-- [ ] Create `web/src/components/BrandBar.tsx` (Paytm Money mark left + ledger chip placeholder right)
-- [ ] Verify: full empty conversation experience — talk to Maya, see her speak, tap orb to pause, no artifacts yet
-- [ ] Commit: `phase-3: conversation shell with pause + mic`
+- [x] Create `web/src/components/Subtitle.tsx` (single italic Fraunces line under orb, who/what split)
+- [x] Create `web/src/components/MicAffordance.tsx` (subtle bottom-centre tap-to-speak; `Tap or just talk` label)
+- [x] Wire orb tap → pause/resume Maya TTS via `usePause` (mutes bot `MediaStreamTrack.enabled`)
+- [x] Create `web/src/components/BrandBar.tsx` (Paytm Money mark left + ledger chip placeholder right)
+- [x] Verify: full empty conversation experience — talk to Maya, see her speak, tap orb to pause, no artifacts yet
+- [x] Commit: `phase-3: conversation shell with pause + mic`
 
 ### Phase 4 — Backend artifact events
 - [ ] Extend `core/ui_bus.py` with `emit_artifact(kind: str, data: dict)` helper

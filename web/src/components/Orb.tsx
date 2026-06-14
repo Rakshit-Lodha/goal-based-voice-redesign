@@ -7,13 +7,19 @@ import type { Mood } from "../state/useMood";
  * pulse on different timings per mood. No animation library — conventions
  * call for CSS / Web Animations API only.
  *
- * Phase 2: visual + mood prop wiring. Tap-to-pause lands in Phase 3.
+ * Renders as a transparent <button> so tap-to-pause is keyboard-accessible.
  */
-export default function Orb({ mood }: { mood: Mood }) {
+export default function Orb({ mood, onTap }: { mood: Mood; onTap?: () => void }) {
   return (
-    <div className={`orb-stage mood-${mood}`} aria-hidden="true">
-      <div className="orb-ring" />
-      <div className="orb-core" />
+    <button
+      type="button"
+      className={`orb-stage mood-${mood}`}
+      onClick={onTap}
+      aria-label={mood === "paused" ? "Resume Maya" : "Pause Maya"}
+      aria-pressed={mood === "paused"}
+    >
+      <span className="orb-ring" />
+      <span className="orb-core" />
 
       <style>{`
         .orb-stage {
@@ -23,7 +29,17 @@ export default function Orb({ mood }: { mood: Mood }) {
           transform: translate(-50%, -50%);
           width: 240px;
           height: 240px;
-          pointer-events: none;
+          background: transparent;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          outline: none;
+        }
+        .orb-stage:focus-visible {
+          /* keyboard focus only — soft champagne ring around the orb area */
+          box-shadow: 0 0 0 2px var(--champagne-soft);
+          border-radius: 50%;
         }
 
         .orb-core,
@@ -32,6 +48,7 @@ export default function Orb({ mood }: { mood: Mood }) {
           inset: 0;
           border-radius: 50%;
           will-change: transform, opacity;
+          pointer-events: none;
         }
 
         /* Inner luminous sphere — the heart of the orb. */
@@ -82,7 +99,7 @@ export default function Orb({ mood }: { mood: Mood }) {
           opacity: 0.42;
         }
 
-        /* ---- paused: dim, frozen. Wired in Phase 3. ---- */
+        /* ---- paused: dim, frozen. ---- */
         .mood-paused { --orb-tint: var(--orb-paused); }
         .mood-paused .orb-core,
         .mood-paused .orb-ring {
@@ -111,6 +128,6 @@ export default function Orb({ mood }: { mood: Mood }) {
           .orb-core, .orb-ring { animation: none !important; }
         }
       `}</style>
-    </div>
+    </button>
   );
 }
