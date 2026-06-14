@@ -47,6 +47,15 @@ type InvestmentsData = {
   manual_count?: number;
 };
 
+type MfcReviewData = {
+  total_funds?: number;
+  total_value?: number;
+  total_monthly_sip?: number;
+  underperformer_count?: number;
+  good_count?: number;
+  insights?: Array<{ tone: "good" | "warn" | "bad"; text: string }>;
+};
+
 export function RiskRevealCard({ data }: { data: RiskData }) {
   return (
     <section>
@@ -76,6 +85,101 @@ export function FamilyRecapCard({ data }: { data: { family?: Family; summary?: s
         <Metric label="Spouse age" value={family?.spouse_age ?? "Not added"} />
         <Metric label="Children" value={children.length} />
       </div>
+    </section>
+  );
+}
+
+/**
+ * MFC review — the diagnostic moment after MF Central returns.
+ *
+ * Eyebrow + Fraunces title + lede frame the verdict; three metrics
+ * (Total funds · Monthly SIP · Underperformers) carry the numbers;
+ * a pinned insight list translates fund_reviews into three plain
+ * sentences with tone-coloured icons.
+ */
+export function MfcReviewCard({ data }: { data: MfcReviewData }) {
+  const totalFunds = data.total_funds ?? 0;
+  const monthlySip = data.total_monthly_sip ?? 0;
+  const underperformers = data.underperformer_count ?? 0;
+  const insights = data.insights ?? [];
+
+  const title = underperformers > 0
+    ? "Your portfolio is invested, but not yet intentional."
+    : "A clean portfolio.";
+  const lede = underperformers > 0
+    ? `Maya found good exposure, but also ${underperformers} laggard${underperformers === 1 ? "" : "s"} and SIPs that do not yet map to your goals.`
+    : "No red flags. Maya will reuse what fits and route the rest to your goals.";
+
+  return (
+    <section className="mfc-review">
+      <div className="artifact-card-eyebrow">MF Central diagnosis</div>
+      <h2 className="artifact-card-title">{title}</h2>
+      <p className="artifact-card-lede">{lede}</p>
+
+      <div className="mfc-metrics">
+        <Metric label="Total funds" value={totalFunds} />
+        <Metric label="Monthly SIP" value={inr(monthlySip)} />
+        <Metric
+          label={underperformers > 0 ? "Need review" : "Good funds"}
+          value={underperformers > 0 ? underperformers : data.good_count ?? 0}
+        />
+      </div>
+
+      {insights.length > 0 && (
+        <ul className="mfc-insights">
+          {insights.map((insight, i) => (
+            <li key={i}>
+              <span className={`pin tone-${insight.tone}`}>
+                {insight.tone === "good" ? "✓" : insight.tone === "warn" ? "!" : "×"}
+              </span>
+              <span>{insight.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <style>{`
+        .mfc-review .artifact-card-title { max-width: none; }
+        .mfc-metrics {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-top: 18px;
+        }
+        .mfc-insights {
+          margin: 16px 0 0;
+          padding: 0;
+          list-style: none;
+          display: grid;
+          gap: 0;
+        }
+        .mfc-insights li {
+          display: grid;
+          grid-template-columns: 24px 1fr;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--cream-deep);
+          color: var(--ink-soft);
+          font-size: 13px;
+          line-height: 1.42;
+        }
+        .mfc-insights li:last-child { border-bottom: none; }
+        .pin {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1;
+        }
+        .pin.tone-good { background: var(--green); color: var(--cream); }
+        .pin.tone-warn { background: var(--champagne); color: var(--ink); }
+        .pin.tone-bad  { background: #B14A2A; color: var(--cream); }
+      `}</style>
     </section>
   );
 }
@@ -542,23 +646,217 @@ export function InflationCurveCard({ data }: { data: InflationData }) {
   );
 }
 
+/**
+ * SIP split — the recommendation thesis + action list for a goal.
+ *
+ * Donut ring shows the current phase's equity/debt/gold split with the
+ * monthly SIP at the centre. Fund rows below carry Keep / Add tags
+ * derived by matching the proposed fund name against existing MF
+ * Central holdings. The whole card is snapshot-aware so tags update
+ * if the user adds or removes a fund mid-call.
+ */
 export function SipSplitCard({ data }: { data: ProposedPortfolio }) {
+  const snapshot = useStateSnapshot();
   const phase = data.current_phase;
+  const existingNames = new Set(
+    (snapshot?.portfolio?.holdings ?? []).map((h) => h.fund.toLowerCase()),
+  );
+
   return (
-    <section>
-      <div className="artifact-card-eyebrow">{data.goal}</div>
-      <h2 className="artifact-card-title">{inr(data.monthly_sip)} monthly SIP</h2>
+    <section className="sip-split">
+      <div className="artifact-card-eyebrow">{data.goal} · target basket</div>
+      <h2 className="artifact-card-title xl">{inr(data.monthly_sip)} monthly SIP</h2>
       <p className="artifact-card-lede">
-        Current phase {phase.phase}, {yearsLabel(phase.duration_years)}. Future phases stay in the glide path.
+        Current phase {phase.phase}, {yearsLabel(phase.duration_years)}.
+        Each rupee has a role: growth, stability, and a gold hedge.
       </p>
-      <div className="artifact-metrics">
-        <Metric label="Equity" value={pct(phase.allocation.equity)} />
-        <Metric label="Debt" value={pct(phase.allocation.debt)} />
-        <Metric label="Gold" value={pct(phase.allocation.gold)} />
-        <Metric label="Horizon" value={titleCase(data.horizon_bucket)} />
+
+      <div className="sip-thesis">
+        <AllocationRing
+          equity={phase.allocation.equity}
+          debt={phase.allocation.debt}
+          gold={phase.allocation.gold}
+          centerLabel={inr(data.monthly_sip)}
+        />
+        <div className="sip-legend">
+          <LegendRow swatch="champagne" label="Equity" value={pct(phase.allocation.equity)} />
+          <LegendRow swatch="green"     label="Debt"   value={pct(phase.allocation.debt)} />
+          <LegendRow swatch="ink"       label="Gold"   value={pct(phase.allocation.gold)} />
+          <LegendRow swatch="soft"      label="Horizon" value={titleCase(data.horizon_bucket)} />
+        </div>
       </div>
-      <FundList phase={phase} />
+
+      {phase.funds?.length ? (
+        <ul className="fund-stack">
+          {phase.funds.map((fund) => {
+            const isExisting = existingNames.has(fund.fund.toLowerCase());
+            return (
+              <li key={`${phase.phase}-${fund.fund}`}>
+                <span className={`tag ${isExisting ? "keep" : "add"}`}>
+                  {isExisting ? "Keep" : "Add"}
+                </span>
+                <div className="fund-name">
+                  <span>{fund.fund}</span>
+                  <small>{titleCase(fund.bucket)} · {fund.rationale}</small>
+                </div>
+                <b className="amount">{inr(fund.monthly_sip)}</b>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      <style>{`
+        .sip-split .artifact-card-title.xl { font-size: 36px; color: var(--champagne); }
+        .sip-thesis {
+          display: grid;
+          grid-template-columns: 118px 1fr;
+          gap: 18px;
+          align-items: center;
+          margin-top: 22px;
+        }
+        .sip-legend { display: grid; gap: 0; }
+        .fund-stack {
+          margin: 18px 0 0;
+          padding: 0;
+          list-style: none;
+          border-top: 1px solid var(--cream-deep);
+        }
+        .fund-stack li {
+          display: grid;
+          grid-template-columns: 64px 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid var(--cream-deep);
+        }
+        .fund-stack li:last-child { border-bottom: none; }
+        .tag {
+          width: fit-content;
+          min-width: 50px;
+          border-radius: 999px;
+          padding: 4px 8px;
+          text-align: center;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .tag.keep { background: rgba(61, 124, 87, 0.13); color: var(--green); }
+        .tag.add  { background: rgba(201, 169, 97, 0.16); color: #B89548; }
+        .fund-name {
+          min-width: 0;
+          font-family: var(--font-display);
+          font-size: 15px;
+          color: var(--ink);
+          line-height: 1.18;
+        }
+        .fund-name small {
+          display: block;
+          margin-top: 4px;
+          color: var(--ink-soft);
+          font-family: var(--font-body);
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .amount {
+          color: #B89548;
+          font-size: 13px;
+          font-weight: 600;
+          font-feature-settings: "tnum";
+          white-space: nowrap;
+        }
+      `}</style>
     </section>
+  );
+}
+
+function AllocationRing({
+  equity,
+  debt,
+  gold,
+  centerLabel,
+}: {
+  equity: number;
+  debt: number;
+  gold: number;
+  centerLabel: string;
+}) {
+  // r=42, C = 2 * PI * 42 ≈ 263.89. Build proportional arcs by accumulating offsets.
+  const C = 264;
+  const eqLen = equity * C;
+  const dbLen = debt * C;
+  const glLen = gold * C;
+  return (
+    <svg viewBox="0 0 120 120" width="118" height="118" role="img" aria-label="Allocation ring">
+      <circle cx="60" cy="60" r="42" fill="none" stroke="var(--cream-deep)" strokeWidth="16" />
+      <g transform="rotate(-90 60 60)">
+        <circle cx="60" cy="60" r="42" fill="none" stroke="var(--champagne)" strokeWidth="16"
+                strokeDasharray={`${eqLen} ${C}`} strokeDashoffset="0" />
+        <circle cx="60" cy="60" r="42" fill="none" stroke="var(--green)" strokeWidth="16"
+                strokeDasharray={`${dbLen} ${C}`} strokeDashoffset={`${-eqLen}`} />
+        <circle cx="60" cy="60" r="42" fill="none" stroke="var(--ink)" strokeWidth="16"
+                strokeDasharray={`${glLen} ${C}`} strokeDashoffset={`${-(eqLen + dbLen)}`} />
+      </g>
+      <text x="60" y="58" textAnchor="middle"
+            fontFamily="Fraunces" fontSize="14" fill="var(--ink)">
+        {centerLabel}
+      </text>
+      <text x="60" y="72" textAnchor="middle"
+            fontFamily="Inter" fontSize="8" letterSpacing="1" fill="var(--ink-soft)">
+        MONTHLY
+      </text>
+    </svg>
+  );
+}
+
+function LegendRow({
+  swatch,
+  label,
+  value,
+}: {
+  swatch: "champagne" | "green" | "ink" | "soft";
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="legend-row">
+      <span>
+        <i className={`legend-swatch swatch-${swatch}`} />
+        {label}
+      </span>
+      <b>{value}</b>
+      <style>{`
+        .legend-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid var(--cream-deep);
+          font-size: 12px;
+          color: var(--ink-soft);
+        }
+        .legend-row:last-child { border-bottom: none; }
+        .legend-row span { display: inline-flex; align-items: center; gap: 8px; }
+        .legend-row b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-weight: 400;
+          font-size: 13px;
+        }
+        .legend-swatch {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .swatch-champagne { background: var(--champagne); }
+        .swatch-green     { background: var(--green); }
+        .swatch-ink       { background: var(--ink); }
+        .swatch-soft      { background: var(--ink-soft); opacity: 0.45; }
+      `}</style>
+    </div>
   );
 }
 

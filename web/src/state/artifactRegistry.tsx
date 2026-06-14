@@ -8,6 +8,7 @@ import {
   InflationCurveCard,
   InvestmentsCard,
   MfcConsentSheet,
+  MfcReviewCard,
   RatiosCard,
   RiskRevealCard,
   SipPlanFallback,
@@ -22,6 +23,8 @@ export function renderArtifact(event: ArtifactEvent): ReactNode {
       return <FamilyRecapCard data={event.data as never} />;
     case "mfc_consent":
       return <MfcConsentSheet data={event.data as never} />;
+    case "mfc_review":
+      return <MfcReviewCard data={event.data as never} />;
     case "aa_consent":
       return <AaConsentSheet data={event.data as never} />;
     case "income_snapshot":

@@ -109,6 +109,37 @@ async def pull_mf_central(args: dict) -> dict:
         "plus downside protection."
     )
     under = p["underperformers"]
+
+    # MFC diagnosis insights — three toned bullets surface in the card.
+    # Good: pick the best-rated suitable fund. Warn: surface a duplicate
+    # category (likely overlap). Bad: name the first underperformer.
+    insights: list[dict] = []
+    good_reviews = [r for r in reviews if r["status"] == "good"]
+    if good_reviews:
+        top_good = max(good_reviews, key=lambda r: r["rating"])
+        insights.append({"tone": "good",
+                         "text": f"Keep {top_good['fund']} — {top_good['category']} fits a "
+                                 f"{STATE.risk_profile or 'balanced'} profile."})
+    categories = [r["category"] for r in reviews]
+    duplicate = next((c for c in dict.fromkeys(categories) if categories.count(c) > 1), None)
+    if duplicate:
+        dup_funds = [r["fund"] for r in reviews if r["category"] == duplicate]
+        insights.append({"tone": "warn",
+                         "text": f"{len(dup_funds)} funds in {duplicate} — likely overlap; "
+                                 f"one can be consolidated."})
+    if under:
+        first_bad = next(r for r in reviews if r["status"] != "good")
+        insights.append({"tone": "bad",
+                         "text": f"{first_bad['fund']} — weak score on consistency versus category."})
+
+    await ui_bus.emit_artifact("mfc_review", {
+        "total_funds": len(p["holdings"]),
+        "total_value": p["total_value"],
+        "total_monthly_sip": p["total_monthly_sip"],
+        "underperformer_count": len(under),
+        "good_count": len(p["good_funds"]),
+        "insights": insights,
+    })
     hint = (f"MF Central is back. Portfolio of {fm.round_to_500(p['total_value']) / 1e5:.0f} "
             f"lakhs across {len(p['holdings'])} funds with {p['total_monthly_sip']} rupees of "
             f"monthly SIPs. Explain that fund review uses category suitability for the "

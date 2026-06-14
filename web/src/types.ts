@@ -117,6 +117,7 @@ export type ArtifactKind =
   | "risk_reveal"
   | "family_recap"
   | "mfc_consent"
+  | "mfc_review"
   | "aa_consent"
   | "income_snapshot"
   | "ratios"
