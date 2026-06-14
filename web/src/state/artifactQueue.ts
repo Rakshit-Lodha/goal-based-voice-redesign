@@ -6,6 +6,10 @@ function isArtifactEvent(message: unknown): message is ArtifactEvent {
   return !!message && typeof message === "object" && (message as ServerMessage).type === "artifact";
 }
 
+function isConsent(kind: string): boolean {
+  return kind.endsWith("_consent");
+}
+
 function isStateEvent(message: unknown): message is StateEvent {
   return !!message && typeof message === "object" && (message as ServerMessage).type === "state";
 }
@@ -64,6 +68,17 @@ export function useArtifactQueue() {
     // updates without sliding off and back on. activeToolRef stays so the
     // next-different-tool dismiss is still deterministic.
     if (activeRef.current.kind === message.kind) {
+      activeRef.current = message;
+      setActive(message);
+      return;
+    }
+    // Consent → result handoff. The *_consent artifacts are emitted before a
+    // tool blocks on the OTP wait; the matching result (mfc_review,
+    // income_snapshot, …) is emitted from the *same* tool after the wait.
+    // The next-different-tool dismiss can't help here because there is no
+    // different tool — the result would otherwise queue behind the consent
+    // and surface at the wrong moment. Replace in place.
+    if (isConsent(activeRef.current.kind) && !isConsent(message.kind)) {
       activeRef.current = message;
       setActive(message);
       return;
