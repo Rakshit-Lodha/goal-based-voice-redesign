@@ -66,19 +66,20 @@ Interview-ready redesign of the Maya voice agent for Paytm Money's Affluent++ DI
 Mark each item `[x]` as completed. Commit at the end of each phase with message `phase-N: <summary>`.
 
 ### Phase 0 — Branch + housekeeping
-- [ ] Verify working tree is clean on `main` at `63b8efd`
-- [ ] Cut branch: `git checkout -b redesign/affluent-ui`
-- [ ] Fix stale `:7860` reference in `bot.py:4`
-- [ ] Commit: `phase-0: branch baseline + comment fix`
+- [x] Verify working tree is clean on `main` at `63b8efd`
+- [x] Cut branch: `git checkout -b redesign/affluent-ui`
+- [x] Fix stale `:7860` reference in `bot.py:4`
+- [x] Commit: `phase-0: branch baseline + comment fix` (`b945cda`)
 
 ### Phase 1 — Design tokens + phone shell
-- [ ] Create `web/src/theme/tokens.ts` (colors, type scale, motion durations, easings)
-- [ ] Create `web/src/theme/fonts.css` (`@font-face` for Fraunces + Inter)
-- [ ] Rewrite `web/src/index.css` (reset, CSS vars from tokens, body bg `#161E2E`)
-- [ ] Create `web/src/components/PhoneFrame.tsx` (390×844 centred viewport, full-bleed on real mobile, navy interior with subtle radial gradient)
-- [ ] Rewrite `web/src/App.tsx` to mount `PhoneFrame` with placeholder content
-- [ ] Verify at `localhost:5173`: dark page, phone frame visible, brand mark rendered
-- [ ] Commit: `phase-1: theme tokens + phone shell`
+- [x] Create `web/src/theme/tokens.ts` (colors, type scale, motion durations, easings)
+- [x] ~~Create `web/src/theme/fonts.css` (`@font-face` for Fraunces + Inter)~~ — superseded by Google Fonts `<link>` in `index.html` (matches Conventions section)
+- [x] Rewrite `web/src/index.css` (reset, CSS vars from tokens, body bg `#161E2E`)
+- [x] Create `web/src/components/PhoneFrame.tsx` (390×844 centred viewport, full-bleed on real mobile, navy interior with subtle radial gradient)
+- [x] Rewrite `web/src/App.tsx` to mount `PhoneFrame` with placeholder content
+- [x] Verify at `localhost:5174`: dark page, phone frame visible, brand mark rendered
+- [x] Pin worktree to `:5174` + proxy `:8001` in `web/vite.config.ts` (isolation from main demo)
+- [x] Commit: `phase-1: theme tokens + phone shell`
 
 ### Phase 2 — Singleton orb
 - [ ] Create `web/src/components/Orb.tsx` accepting `mood: 'idle' | 'listening' | 'talking' | 'paused'`
@@ -159,25 +160,31 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - **Untouched files.** Do not edit `core/finmath.py`, `core/session.py`, `agent/prompts.py`, or any test file. If a change feels needed, stop and ask.
 - **No new dependencies.** Motion is CSS / Web Animations API. Charts are hand-rolled SVG. Fonts come from Google Fonts via `<link>`.
 - **Mobile-first widths.** Build at 390px, validate the desktop centring works at 1440px.
-- **Demoable after every phase.** Open `localhost:5173`, talk to Maya, confirm the demoable state listed in the phase. If you cannot demonstrate it, the phase isn't done.
+- **Demoable after every phase.** Open `localhost:5174`, talk to Maya, confirm the demoable state listed in the phase. If you cannot demonstrate it, the phase isn't done.
 
 ## Local run
 
-```bash
-# Terminal A — backend
-python server.py
+This branch lives in a parallel **git worktree** so the main demo on `:5173` stays untouched:
 
-# Terminal B — UI
-cd web && npm run dev
+```bash
+# Main repo (demo, untouched)
+~/Desktop/goal-based-voice                  # main @ 63b8efd
+  python server.py                          # backend :8000
+  cd web && npm run dev                     # frontend :5173
+
+# Redesign worktree (this branch)
+~/Desktop/goal-based-voice-redesign         # redesign/affluent-ui
+  PORT=8001 python server.py                # backend :8001
+  cd web && npm run dev                     # frontend :5174 (strictPort)
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5174` for the redesign.
 
 ---
 
 ## Still-open questions (resolve as you build)
 
-1. **Phone frame chrome on desktop** — clean rounded rectangle (current) vs full device mockup (notch + bezel + shadow). Decide before Phase 1.
+1. ~~**Phone frame chrome on desktop**~~ — **resolved Phase 1:** clean rounded rectangle. Full device mockup competes with the orb visually and reads kitsch at the affluent register.
 2. **Goal tile icons** — line illustrations (champagne stroke on cream) confirmed; revisit if they read too restrained at real size.
 3. **Cascade diff toast persistence** — 3s auto-dismiss vs sticky until tapped. Decide during Phase 8.
 4. **Ledger panel gesture** — tap chip only, or also swipe-down anywhere on screen. Decide during Phase 7.
