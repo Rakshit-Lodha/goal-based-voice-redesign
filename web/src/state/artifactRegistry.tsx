@@ -6,6 +6,7 @@ import {
   FundsPickerSheet,
   IncomeSnapshotCard,
   InflationCurveCard,
+  InvestmentsCard,
   MfcConsentSheet,
   RatiosCard,
   RiskRevealCard,
@@ -27,6 +28,8 @@ export function renderArtifact(event: ArtifactEvent): ReactNode {
       return <IncomeSnapshotCard data={event.data as never} />;
     case "ratios":
       return <RatiosCard data={event.data as never} />;
+    case "investments_review":
+      return <InvestmentsCard data={event.data as never} />;
     case "inflation_curve":
       return <InflationCurveCard data={event.data as never} />;
     case "sip_split":

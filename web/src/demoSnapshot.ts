@@ -33,6 +33,8 @@ export const DEMO_SNAPSHOT: Snapshot = {
     nps: 50000,
     stocks: 500000,
   },
+  cashflow_confirmed: true,
+  investments_confirmed: true,
   financial_snapshot_confirmed: true,
   additional_assets: [
     { name: "PPF account", asset_type: "ppf", value: 200000 },

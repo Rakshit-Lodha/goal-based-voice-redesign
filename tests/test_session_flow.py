@@ -29,7 +29,17 @@ def test_next_step_blocks_goals_until_financial_snapshot_confirmed():
     _set_ready_for_financial_confirmation()
 
     assert progress()["finances"] == "pending"
-    assert "Do not move to goals yet" in next_step()
+    assert "Do not move to investments or goals yet" in next_step()
+    assert "last three months" in next_step()
+
+
+def test_next_step_moves_to_investments_after_cashflow_confirmation():
+    _set_ready_for_financial_confirmation()
+    STATE.cashflow_confirmed = True
+
+    assert progress()["finances"] == "pending"
+    assert "recap the savings rate" in next_step()
+    assert "EMI-to-income ratio" in next_step()
     assert "PPF" in next_step()
     assert "US stocks" in next_step()
     assert "international stocks" in next_step()

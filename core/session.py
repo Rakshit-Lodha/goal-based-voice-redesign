@@ -39,6 +39,8 @@ class SessionState:
     aa_assets: dict | None = None
     # True only after the user has accepted AA-derived cash flow/assets and answered
     # the additional-investments check.
+    cashflow_confirmed: bool = False
+    investments_confirmed: bool = False
     financial_snapshot_confirmed: bool = False
     # Voice-added extras (PPF, FDs, gold, real estate): list of {name, asset_type, value}.
     additional_assets: list = field(default_factory=list)
@@ -115,14 +117,27 @@ def next_step() -> str:
                 "OTP is being triggered. If you already said it and AA is still pending, call "
                 "pull_account_aggregator immediately.")
     if not s.financial_snapshot_confirmed:
-        return ("Do not move to goals yet. First confirm the Account Aggregator snapshot: "
-                "income, outflow, expense breakup, EMIs, EPF, NPS and stocks. If anything "
-                "is wrong, call pull_account_aggregator again with corrections. Then ask "
-                "whether the user wants to add any investments AA may not capture, especially "
-                "PPF, FDs, gold, real estate, US stocks or international stocks. For each "
-                "asset they mention, call add_manual_asset. Once the user explicitly says "
-                "the data is correct and there are no more additions, call "
-                "confirm_financial_snapshot.")
+        if not s.cashflow_confirmed:
+            return ("Do not move to investments or goals yet. First show the Account Aggregator "
+                    "income and expense snapshot: explain it came from the last three months of "
+                    "bank data, show average monthly income, average monthly outflow, expense "
+                    "breakup, EMIs, savings rate and EMI-to-income ratio. Ask if the user wants "
+                    "to edit any income or expense number. If they edit, call "
+                    "pull_account_aggregator again with only those corrections and then show the "
+                    "updated cash-flow snapshot. Only after the user confirms income and expenses "
+                    "are correct, call confirm_financial_snapshot with user_confirmed_cashflow true "
+                    "and user_confirmed_investments false.")
+        if not s.investments_confirmed:
+            return ("Cash flow is confirmed. Before moving on, recap the savings rate and "
+                    "EMI-to-income ratio with their good / average / bad labels. Then move to "
+                    "investments: show MF Central holdings plus Finvu EPF, NPS and stocks as a "
+                    "list. Ask if the user wants to edit or add investments such as PPF, FDs, "
+                    "gold, real estate, US stocks or "
+                    "international stocks. For each added item, call add_manual_asset. If they "
+                    "correct EPF, NPS or stocks, call pull_account_aggregator again with only "
+                    "those corrections. Once the user confirms investments and has answered the "
+                    "additions question, call confirm_financial_snapshot with both "
+                    "user_confirmed_cashflow and user_confirmed_investments true.")
     # MF portfolio review is narrative-only — gated by portfolio + aa_assets both being set.
     if len(s.goals) < 1:
         return ("Before goals, briefly review the MF Central portfolio: explain that funds are "
@@ -135,11 +150,14 @@ def next_step() -> str:
                 "loss, medical issues or any disruption, then call add_goal with no "
                 "target_amount_today so the tool computes it. Also suggest retirement anchored "
                 "to age 60 and child education if relevant.")
-    pending_gap = next((g for g in s.goals if g.funded and g.required_sip is None), None)
+    pending_gap = next((g for g in sorted(s.goals, key=lambda g: g.priority)
+                        if g.funded and g.required_sip is None), None)
     if pending_gap:
         return (f"For goal '{pending_gap.name}': call project_existing_corpus, then "
-                f"compute_gap_and_sip. Present the gap honestly.")
-    funded_goals = [g for g in s.goals if g.funded and (g.required_sip or 0) > 0]
+                f"compute_gap_and_sip. Present the gap honestly. Complete this goal's "
+                f"planning before moving to the next goal.")
+    funded_goals = [g for g in sorted(s.goals, key=lambda g: g.priority)
+                    if g.funded and (g.required_sip or 0) > 0]
     pending_plan = next((g for g in funded_goals if g.name not in s.proposed_portfolios), None)
     if pending_plan:
         if not s.proposed_portfolios:
@@ -150,7 +168,8 @@ def next_step() -> str:
                     f"call build_goal_portfolio for '{pending_plan.name}'.")
         return f"Call build_goal_portfolio for '{pending_plan.name}' next."
     if not s.plan_pdf_path:
-        return "Call generate_plan_pdf, then summarize 3 action items and close warmly."
+        return ("Only after every captured funded goal has its gap and portfolio complete, "
+                "call generate_plan_pdf, then summarize 3 action items and close warmly.")
     return "Plan is done. Summarize the 3 action items and say a warm goodbye."
 
 
@@ -168,6 +187,8 @@ def snapshot(last_event: str | None = None) -> dict:
         "risk_profile": s.risk_profile,
         "family": s.family,
         "aa_assets": s.aa_assets,
+        "cashflow_confirmed": s.cashflow_confirmed,
+        "investments_confirmed": s.investments_confirmed,
         "financial_snapshot_confirmed": s.financial_snapshot_confirmed,
         "additional_assets": s.additional_assets,
         "portfolio": s.portfolio,

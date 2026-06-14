@@ -101,6 +101,8 @@ export interface Snapshot {
   risk_profile: string | null;
   family: Family | null;
   aa_assets: AaAssets | null;
+  cashflow_confirmed: boolean;
+  investments_confirmed: boolean;
   financial_snapshot_confirmed: boolean;
   additional_assets: ManualAsset[];
   portfolio: Portfolio | null;
@@ -118,6 +120,7 @@ export type ArtifactKind =
   | "aa_consent"
   | "income_snapshot"
   | "ratios"
+  | "investments_review"
   | "inflation_curve"
   | "sip_split"
   | "funds_picker"

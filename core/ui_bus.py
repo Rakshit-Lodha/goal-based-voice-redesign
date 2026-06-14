@@ -18,6 +18,7 @@ ArtifactKind = Literal[
     "aa_consent",
     "income_snapshot",
     "ratios",
+    "investments_review",
     "inflation_curve",
     "sip_split",
     "funds_picker",

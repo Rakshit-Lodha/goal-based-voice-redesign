@@ -59,6 +59,15 @@ export function useArtifactQueue() {
       setActive(message);
       return;
     }
+    // Same kind arriving while still active = a live correction (e.g. user
+    // edited income, AA re-pulled). Replace in place so the visible card
+    // updates without sliding off and back on. activeToolRef stays so the
+    // next-different-tool dismiss is still deterministic.
+    if (activeRef.current.kind === message.kind) {
+      activeRef.current = message;
+      setActive(message);
+      return;
+    }
     setQueue((items) => [...items, message]);
   });
 

@@ -23,6 +23,23 @@ def _pct(x: float) -> str:
     return f"{x * 100:.0f} percent"
 
 
+def _invalidate_plan_after_financial_edit(*, cashflow_changed: bool, investments_changed: bool) -> None:
+    if cashflow_changed:
+        STATE.cashflow_confirmed = False
+    if investments_changed:
+        STATE.investments_confirmed = False
+    STATE.financial_snapshot_confirmed = False
+    STATE.goals.clear()
+    STATE.gap_result = None
+    STATE.proposed_portfolios.clear()
+    STATE.plan_pdf_path = None
+    STATE.corpus_fraction_remaining = 1.0
+
+
+def _has_any(args: dict, keys: tuple[str, ...]) -> bool:
+    return any(args.get(key) is not None for key in keys)
+
+
 def _fund_review(holding: dict, risk_profile: str | None) -> dict:
     category = holding.get("category") or holding["type"]
     rating = int(holding.get("rating") or 0)
@@ -125,6 +142,23 @@ async def pull_account_aggregator(args: dict) -> dict:
             return missing("the Account Aggregator OTP",
                            "Tell the user the OTP did not match, then call pull_account_aggregator again so they can retry.")
 
+    previous_assets = STATE.aa_assets or {}
+    correction_keys = (
+        "monthly_income", "monthly_expenses", "monthly_emi", "investments",
+        "household_expenses", "utilities", "entertainment", "epf", "nps", "stocks",
+    )
+    is_correction = bool(STATE.aa_assets) and _has_any(args, correction_keys)
+    cashflow_changed = _has_any(args, (
+        "monthly_income", "monthly_expenses", "monthly_emi", "investments",
+        "household_expenses", "utilities", "entertainment",
+    ))
+    investments_changed = _has_any(args, ("epf", "nps", "stocks"))
+    if is_correction:
+        _invalidate_plan_after_financial_edit(
+            cashflow_changed=cashflow_changed,
+            investments_changed=investments_changed,
+        )
+
     previous_breakdown = STATE.expense_breakdown or {}
     breakdown = {
         "investments": float(args.get("investments") if args.get("investments") is not None
@@ -144,7 +178,6 @@ async def pull_account_aggregator(args: dict) -> dict:
     STATE.monthly_expenses = float(args.get("monthly_expenses") if args.get("monthly_expenses") is not None
                                    else non_emi_total)
     STATE.expense_breakdown = {**breakdown, "emis": STATE.monthly_emi}
-    previous_assets = STATE.aa_assets or {}
     STATE.aa_assets = {
         "epf": float(args.get("epf") if args.get("epf") is not None
                      else previous_assets.get("epf", 450_000)),
@@ -168,16 +201,34 @@ async def pull_account_aggregator(args: dict) -> dict:
         "aa_assets": aa,
     })
     await ui_bus.emit_artifact("ratios", r)
-    hint = (f"Finvu is back. Say you looked at the last three months of bank data. "
+    # Investments review: a summary trigger; the card binds to the live
+    # snapshot for breakup + total, so this payload stays light.
+    await ui_bus.emit_artifact("investments_review", {
+        "mf_total": (STATE.portfolio or {}).get("total_value"),
+        "aa_assets": aa,
+        "manual_count": len(STATE.additional_assets or []),
+    })
+    if is_correction:
+        changed = []
+        if cashflow_changed:
+            changed.append("income and expenses")
+        if investments_changed:
+            changed.append("investments")
+        changed_text = " and ".join(changed) or "the snapshot"
+        prefix = f"Updated {changed_text}. "
+    else:
+        prefix = "Finvu is back. "
+    hint = (f"{prefix}Say you looked at the last three months of bank data. "
             f"Average monthly income is {STATE.monthly_income} rupees. Average monthly outflow "
             f"is {total_outflow} rupees: investments {breakdown['investments']}, EMIs "
             f"{STATE.monthly_emi}, household {breakdown['household_expenses']}, utilities "
             f"{breakdown['utilities']}, entertainment {breakdown['entertainment']}. "
             f"Also say the savings rate is {_pct(r['savings_rate'])}, which is {r['savings_band']}; "
             f"the EMI-to-income ratio is {_pct(r['debt_to_income'])}, which is {r['dti_band']}. "
-            f"Ask if this looks correct. If not, ask for the corrected value and call "
-            f"pull_account_aggregator again with that correction; do not ask for OTP again. "
-            f"Also mention EPF {aa['epf']}, NPS {aa['nps']}, stocks {aa['stocks']}.")
+            f"Ask the user to confirm income and expenses before moving to investments. If not, "
+            f"ask for the corrected value and call pull_account_aggregator again with that "
+            f"correction; do not ask for OTP again. Do not discuss EPF, NPS and stocks until "
+            f"the cash-flow snapshot is confirmed.")
     return tool_response({"ratios": r, "aa_assets": aa,
                           "monthly_income": STATE.monthly_income,
                           "monthly_expenses": STATE.monthly_expenses,
@@ -216,6 +267,13 @@ async def add_family(args: dict) -> dict:
 
 async def add_manual_asset(args: dict) -> dict:
     """Stage 3c (optional): voice-added extras like PPF, FDs, gold, real estate."""
+    STATE.investments_confirmed = False
+    STATE.financial_snapshot_confirmed = False
+    STATE.goals.clear()
+    STATE.gap_result = None
+    STATE.proposed_portfolios.clear()
+    STATE.plan_pdf_path = None
+    STATE.corpus_fraction_remaining = 1.0
     entry = {
         "name": args["name"],
         "asset_type": args.get("asset_type") or "other",
@@ -234,20 +292,31 @@ async def confirm_financial_snapshot(args: dict) -> dict:
     if not STATE.aa_assets or not STATE.ratios:
         return missing("the Account Aggregator pull",
                        "Call pull_account_aggregator first so there is a financial snapshot to confirm.")
-    if not args.get("user_confirmed_financial_data"):
-        return missing("explicit confirmation of the Account Aggregator data",
-                       "Ask whether the income, outflow, expense breakup, EMIs, EPF, NPS and stocks look correct.")
-    if not args.get("user_answered_additional_assets"):
+    cashflow_ok = bool(args.get("user_confirmed_cashflow") or args.get("user_confirmed_financial_data"))
+    investments_ok = bool(args.get("user_confirmed_investments") or args.get("user_confirmed_financial_data"))
+    if cashflow_ok:
+        STATE.cashflow_confirmed = True
+    if investments_ok and args.get("user_answered_additional_assets"):
+        STATE.investments_confirmed = True
+    if not STATE.cashflow_confirmed:
+        return missing("explicit confirmation of income and expenses",
+                       "Show the AA income and expense methodology, ask for edits, and get the user's confirmation before moving to investments.")
+    if not args.get("user_answered_additional_assets") and investments_ok:
         return missing("the additional-investments answer",
                        "Ask whether they want to add PPF, FDs, gold, real estate, US stocks or international stocks before goals.")
+    if not STATE.investments_confirmed:
+        return missing("explicit confirmation of investments",
+                       "First recap the savings rate and EMI-to-income ratio with their labels, then show MF Central holdings plus Finvu EPF, NPS and stocks as a list. Ask for edits or additions, then confirm investments before goals.")
 
     STATE.financial_snapshot_confirmed = True
-    hint = ("Financial snapshot confirmed. The user accepted the AA-derived cash flow "
-            "and holdings, and has answered the additional-investments check. Before goals, "
+    hint = ("Financial snapshot confirmed. The user accepted the AA-derived cash flow, "
+            "the investment holdings, and has answered the additional-investments check. Before goals, "
             "review the MF Central portfolio: explain category suitability for the user's "
             "risk profile and fund score based on consistency versus category average plus "
             "downside protection, then mention the good funds and underperformers briefly.")
     return tool_response({
+        "cashflow_confirmed": STATE.cashflow_confirmed,
+        "investments_confirmed": STATE.investments_confirmed,
         "financial_snapshot_confirmed": True,
         "additional_assets": STATE.additional_assets,
     }, hint)
@@ -551,11 +620,13 @@ TOOL_SPECS = [
       "asset_type": {"type": "string", "description": "Category: ppf, fd, gold, real_estate, us_stocks, international_stocks, other"},
       "value": {"type": "number", "description": "Current value in INR"}},
      ["name", "value"]),
-    (confirm_financial_snapshot, "Mark the financial snapshot ready for goals. Call only after the user explicitly confirms the AA-derived income, expenses, EMIs, EPF, NPS and stocks are correct, and has answered whether to add extra investments such as PPF, FDs, gold, real estate, US stocks or international stocks.",
-     {"user_confirmed_financial_data": {"type": "boolean", "description": "True only after the user explicitly says the AA data looks correct or is good to go"},
+    (confirm_financial_snapshot, "Mark financial data ready for goals in two confirmations. First call after the user confirms AA-derived income, expenses, EMIs and methodology, with user_confirmed_cashflow true and user_confirmed_investments false. Later call only after showing MF holdings plus Finvu EPF, NPS and stocks, handling edits/additions, and getting investment confirmation.",
+     {"user_confirmed_cashflow": {"type": "boolean", "description": "True only after the user explicitly confirms income, expenses, EMIs and cash-flow methodology"},
+      "user_confirmed_investments": {"type": "boolean", "description": "True only after the user explicitly confirms MF holdings plus EPF, NPS, stocks and any additions"},
+      "user_confirmed_financial_data": {"type": "boolean", "description": "Backward-compatible: true only if the user confirmed both cash flow and investments"},
       "user_answered_additional_assets": {"type": "boolean", "description": "True only after the user answered the additional-investments question"},
       "confirmation_context": {"type": "string", "description": "Brief summary of the user's confirmation and additions/no additions"}},
-     ["user_confirmed_financial_data", "user_answered_additional_assets", "confirmation_context"]),
+     ["user_confirmed_cashflow", "user_confirmed_investments", "user_answered_additional_assets", "confirmation_context"]),
     (add_goal, "Register a financial goal (max 4) and get its inflation-adjusted future cost. For an emergency fund, omit target_amount_today so the tool uses six months of confirmed monthly outflow.",
      {"name": {"type": "string"}, "target_amount_today": {"type": "number", "description": "Cost in today's rupees"},
       "horizon_years": {"type": "integer"}, "priority": {"type": "integer", "description": "1 = most important"}},
