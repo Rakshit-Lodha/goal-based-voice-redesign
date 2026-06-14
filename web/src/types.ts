@@ -110,3 +110,36 @@ export interface Snapshot {
   progress: Progress;
   last_event: string | null;
 }
+
+export type ArtifactKind =
+  | "risk_reveal"
+  | "family_recap"
+  | "mfc_consent"
+  | "aa_consent"
+  | "income_snapshot"
+  | "ratios"
+  | "inflation_curve"
+  | "sip_split"
+  | "funds_picker"
+  | "plan_hero";
+
+export interface ArtifactEvent<T = unknown> {
+  type: "artifact";
+  kind: ArtifactKind;
+  data: T;
+}
+
+export interface StateEvent {
+  type: "state";
+  payload: Snapshot;
+}
+
+export interface OtpRequestEvent {
+  type: "otp_request";
+  payload: {
+    request_id: string;
+    provider: string;
+  };
+}
+
+export type ServerMessage = ArtifactEvent | StateEvent | OtpRequestEvent | { type: string; [key: string]: unknown };

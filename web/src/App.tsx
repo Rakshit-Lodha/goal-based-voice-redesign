@@ -1,13 +1,20 @@
-import { useMemo } from "react";
-import { PipecatClientProvider, PipecatClientAudio } from "@pipecat-ai/client-react";
-import { createClient } from "./pcClient";
+import { useCallback, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import type { TransportState } from "@pipecat-ai/client-js";
+import { PipecatClientProvider, PipecatClientAudio, usePipecatClient } from "@pipecat-ai/client-react";
+import { API_BASE, createClient } from "./pcClient";
 import PhoneFrame from "./components/PhoneFrame";
 import BrandBar from "./components/BrandBar";
 import Orb from "./components/Orb";
 import Subtitle from "./components/Subtitle";
 import MicAffordance from "./components/MicAffordance";
+import Artifact from "./components/Artifact";
+import OtpSheet, { type OtpRequest } from "./components/OtpSheet";
+import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
 import { usePause } from "./state/usePause";
+import { useArtifactQueue } from "./state/artifactQueue";
+import type { OtpRequestEvent, ServerMessage } from "./types";
 
 export default function App() {
   const client = useMemo(() => createClient(), []);
@@ -33,16 +40,115 @@ export default function App() {
  * the ledger chip placeholder with the live STATE-driven version.
  */
 function Conversation() {
+  const client = usePipecatClient();
   const baseMood = useMood();
   const { isPaused, togglePause } = usePause();
+  const { active, queuedCount, dismiss } = useArtifactQueue();
+  const [transportState, setTransportState] = useState<TransportState>("disconnected");
+  const [dialing, setDialing] = useState(false);
+  const [callError, setCallError] = useState<string | null>(null);
+  const [otp, setOtp] = useState<OtpRequest | null>(null);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpSubmitting, setOtpSubmitting] = useState(false);
   const mood: Mood = isPaused ? "paused" : baseMood;
+  const live = transportState === "connected" || transportState === "ready";
+  const micState = live ? "live" : dialing ? "connecting" : "idle";
+  const hasSummonedSurface = !!active || !!otp;
+
+  useRtviEvent("transportStateChanged", (state) => {
+    const nextState = state as TransportState;
+    setTransportState(nextState);
+    if (nextState === "connected" || nextState === "ready") {
+      setDialing(false);
+      setCallError(null);
+    }
+    if (nextState === "disconnected" || nextState === "error") {
+      setDialing(false);
+    }
+  });
+
+  useRtviEvent("serverMessage", (data) => {
+    const msg = data as ServerMessage;
+    if (isOtpRequest(msg)) {
+      dismiss();
+      setOtp(msg.payload);
+      setOtpValue("");
+      setOtpError(null);
+      setOtpSubmitting(false);
+    }
+  });
+
+  const startCall = useCallback(async () => {
+    if (!client || dialing || live) return;
+    setCallError(null);
+    setDialing(true);
+    try {
+      await client.connect();
+    } catch (error) {
+      console.error("connect failed", error);
+      setCallError("Could not start call. Check mic permission and backend :8001, then tap again.");
+      await client.disconnect().catch(() => undefined);
+      setDialing(false);
+    }
+  }, [client, dialing, live]);
+
+  const endCall = useCallback(async () => {
+    setDialing(false);
+    setCallError(null);
+    setOtp(null);
+    await client?.disconnect();
+  }, [client]);
+
+  const submitOtp = useCallback(async (event: FormEvent) => {
+    event.preventDefault();
+    if (!otp) return;
+    setOtpSubmitting(true);
+    setOtpError(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: otp.request_id, otp: otpValue }),
+      });
+      const body = await response.json();
+      if (!body.accepted) {
+        setOtpError("This OTP request is no longer active. Ask Maya to trigger it again.");
+        return;
+      }
+      setOtp(null);
+      setOtpValue("");
+    } catch (error) {
+      setOtpError(`Could not verify OTP: ${String(error)}`);
+    } finally {
+      setOtpSubmitting(false);
+    }
+  }, [otp, otpValue]);
 
   return (
     <>
       <BrandBar />
-      <Orb mood={mood} onTap={togglePause} />
+      <Orb mood={mood} onTap={togglePause} summoned={hasSummonedSurface} />
       <Subtitle mood={mood} />
-      <MicAffordance />
+      <Artifact artifact={active} queuedCount={queuedCount} onDismiss={dismiss} />
+      <OtpSheet
+        otp={otp}
+        value={otpValue}
+        error={otpError}
+        submitting={otpSubmitting}
+        onChange={setOtpValue}
+        onSubmit={submitOtp}
+      />
+      <MicAffordance
+        state={micState}
+        onStart={startCall}
+        onEnd={endCall}
+        error={callError}
+      />
     </>
   );
+}
+
+function isOtpRequest(message: ServerMessage): message is OtpRequestEvent {
+  return message.type === "otp_request" && !!message.payload;
 }

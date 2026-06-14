@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Maya · fund recommendation moment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:        #0A1628;
+  --navy-2:      #142239;
+  --cream:       #F7F2EA;
+  --cream-2:     #EFE7D6;
+  --hairline:    #E6DECF;
+  --hairline-2:  #D8CFBC;
+  --champagne:   #C9A961;
+  --champagne-2: #B89548;
+  --green:       #3D7C57;
+  --red:         #9E4B45;
+  --blue:        #4A6FAE;
+  --ink:         #1A1F2E;
+  --ink-mute:    #6B6356;
+  --ink-soft:    #4A4538;
+  --on-dark:     #F7F2EA;
+  --on-dark-mute:#8C97AB;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', -apple-system, system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100vh;
+  background: #161E2E;
+  color: var(--on-dark);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+body { padding: 56px 32px 80px; }
+.page-head { text-align: center; }
+.page-head h1 {
+  font-family: var(--serif);
+  font-size: 34px;
+  font-weight: 400;
+}
+.page-head h1 em { color: var(--champagne); font-style: italic; }
+.page-head p {
+  max-width: 680px;
+  margin: 12px auto 0;
+  color: var(--on-dark-mute);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 390px);
+  gap: 56px;
+  justify-content: center;
+  margin-top: 42px;
+}
+.cell { display: flex; flex-direction: column; align-items: center; }
+.label {
+  margin-top: 18px;
+  color: var(--on-dark-mute);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.label b { color: var(--champagne); font-weight: 500; margin-right: 8px; }
+.phone {
+  width: 390px;
+  height: 844px;
+  border-radius: 44px;
+  background: var(--navy);
+  background-image:
+    radial-gradient(circle at 50% 30%, rgba(155,175,220,0.10), transparent 52%),
+    radial-gradient(circle at 50% 90%, rgba(10,22,40,0.70), transparent 52%);
+  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+  position: relative;
+}
+.brand {
+  position: absolute;
+  top: 56px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 4;
+}
+.brand-mark {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 16px;
+}
+.brand-mark em { color: var(--champagne); font-style: italic; }
+.ledger-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 9px;
+  border: 1px solid rgba(247,242,234,0.10);
+  border-radius: 999px;
+  background: rgba(247,242,234,0.06);
+  color: var(--cream);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.ledger-chip .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--champagne);
+}
+.orb-wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateY(-168px);
+  z-index: 3;
+}
+.orb {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  box-shadow:
+    0 0 72px 12px rgba(201,169,97,0.32),
+    0 0 140px 28px rgba(201,169,97,0.14),
+    inset 0 -10px 22px rgba(80,50,10,0.38),
+    inset 0 7px 12px rgba(255,240,210,0.16);
+  animation: breathe 1.7s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.08); transform: scale(1.035); }
+}
+.subtitle {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  top: 252px;
+  text-align: center;
+  z-index: 3;
+}
+.subtitle .who {
+  color: var(--on-dark-mute);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.subtitle .what {
+  color: var(--cream);
+  font-family: var(--serif);
+  font-size: 17px;
+  font-style: italic;
+  line-height: 1.4;
+}
+.sheet {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-height: 552px;
+  overflow: hidden;
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 28px;
+  padding: 22px;
+  z-index: 6;
+  box-shadow: 0 -24px 70px -28px rgba(0,0,0,0.50);
+}
+.eyebrow {
+  color: var(--ink-mute);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+h2 {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.14;
+}
+h2.xl {
+  color: var(--champagne-2);
+  font-size: 42px;
+  letter-spacing: -0.02em;
+}
+.lede {
+  margin-top: 12px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+.metric {
+  min-height: 72px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--cream-2);
+  padding: 12px;
+}
+.metric span {
+  display: block;
+  color: var(--ink-mute);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.metric b {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+.thesis {
+  display: grid;
+  grid-template-columns: 116px 1fr;
+  gap: 18px;
+  align-items: center;
+  margin-top: 18px;
+}
+.ring { width: 116px; height: 116px; }
+.legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 12px;
+}
+.legend-row:last-child { border-bottom: none; }
+.legend-row span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+}
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--champagne);
+}
+.swatch.green { background: var(--green); }
+.swatch.blue { background: var(--blue); }
+.swatch.dark { background: var(--ink); }
+.fund-stack {
+  margin-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+.fund-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.tag {
+  width: fit-content;
+  min-width: 58px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tag.keep { background: rgba(61,124,87,0.13); color: var(--green); }
+.tag.switch { background: rgba(201,169,97,0.16); color: var(--champagne-2); }
+.tag.stop { background: rgba(158,75,69,0.12); color: var(--red); }
+.fund-name {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.15;
+}
+.fund-name small {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink-mute);
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.amount {
+  color: var(--champagne-2);
+  font-size: 13px;
+  font-weight: 600;
+  font-feature-settings: 'tnum';
+}
+.insight-list {
+  margin-top: 14px;
+  list-style: none;
+}
+.insight-list li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.38;
+}
+.insight-list li:last-child { border-bottom: none; }
+.pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 11px;
+}
+.pin.warn { background: var(--champagne-2); }
+.pin.bad { background: var(--red); }
+.micro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  color: var(--ink-mute);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.micro button {
+  background: none;
+  border: none;
+  color: var(--ink-mute);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-decoration: underline;
+}
+.voice-chip {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 592px;
+  z-index: 2;
+  border: 1px solid rgba(201,169,97,0.22);
+  border-radius: 999px;
+  padding: 11px 14px;
+  background: rgba(247,242,234,0.06);
+  color: var(--cream);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+}
+@media (max-width: 1320px) {
+  .board { grid-template-columns: 390px; }
+}
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Paytm <em>Money</em> · Maya fund recommendation</h1>
+    <p>Focused mockup for the moment after MF Central returns current mutual fund data. The flow makes Maya's recommendation visual: diagnose the existing portfolio, explain the target allocation, then show explicit keep / switch / stop actions.</p>
+  </div>
+
+  <div class="board">
+    <div class="cell">
+      <div class="phone">
+        <div class="brand">
+          <span class="brand-mark">Paytm <em>Money</em></span>
+          <div class="ledger-chip"><span class="dot"></span><span>4 · confirmed</span></div>
+        </div>
+        <div class="orb-wrap"><div class="orb"></div></div>
+        <div class="subtitle">
+          <div class="who">Maya</div>
+          <div class="what">"MF Central found six funds. Let me show you what is actually useful."</div>
+        </div>
+        <div class="voice-chip">Portfolio read complete · ₹18.2L current value</div>
+
+        <section class="sheet">
+          <div class="eyebrow">MF Central diagnosis</div>
+          <h2>Your portfolio is invested, but not yet intentional.</h2>
+          <p class="lede">Maya found good equity exposure, but also overlap, two laggards, and SIPs that do not map cleanly to your goals.</p>
+          <div class="metrics">
+            <div class="metric"><span>Total funds</span><b>6</b></div>
+            <div class="metric"><span>Overlap</span><b>31%</b></div>
+            <div class="metric"><span>Monthly SIP</span><b>₹12k</b></div>
+          </div>
+          <ul class="insight-list">
+            <li><span class="pin">✓</span><span>Keep the broad flexi-cap exposure. It matches your aggressive profile.</span></li>
+            <li><span class="pin warn">!</span><span>Two large-cap funds are doing the same job; one can be consolidated.</span></li>
+            <li><span class="pin bad">×</span><span>One small-cap fund has underperformed peers for three years.</span></li>
+          </ul>
+          <div class="micro"><span>Maya summoned this</span><button>Dismiss</button></div>
+        </section>
+      </div>
+      <div class="label"><b>01</b>Portfolio diagnosis</div>
+    </div>
+
+    <div class="cell">
+      <div class="phone">
+        <div class="brand">
+          <span class="brand-mark">Paytm <em>Money</em></span>
+          <div class="ledger-chip"><span class="dot"></span><span>5 · confirmed</span></div>
+        </div>
+        <div class="orb-wrap"><div class="orb"></div></div>
+        <div class="subtitle">
+          <div class="who">Maya</div>
+          <div class="what">"For the next phase, I want your SIP to do four jobs, not six."</div>
+        </div>
+        <div class="voice-chip">Recommendation thesis · aggressive, long horizon</div>
+
+        <section class="sheet">
+          <div class="eyebrow">Target basket</div>
+          <h2 class="xl">4 funds</h2>
+          <p class="lede">A cleaner basket gives each rupee a role: growth, stability, liquidity, and hedge. Existing holdings are reused where they already fit.</p>
+          <div class="thesis">
+            <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Recommended fund allocation">
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#EFE7D6" stroke-width="18"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#C9A961" stroke-width="18" stroke-dasharray="132 264" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#3D7C57" stroke-width="18" stroke-dasharray="66 264" stroke-dashoffset="-132" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#4A6FAE" stroke-width="18" stroke-dasharray="40 264" stroke-dashoffset="-198" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#1A1F2E" stroke-width="18" stroke-dasharray="26 264" stroke-dashoffset="-238" transform="rotate(-90 60 60)"/>
+              <text x="60" y="56" text-anchor="middle" font-family="Fraunces" font-size="20" fill="#1A1F2E">₹50k</text>
+              <text x="60" y="73" text-anchor="middle" font-family="Inter" font-size="8" fill="#6B6356" letter-spacing="1">monthly</text>
+            </svg>
+            <div>
+              <div class="legend-row"><span><i class="swatch"></i>Core equity</span><b>50%</b></div>
+              <div class="legend-row"><span><i class="swatch green"></i>Stability</span><b>25%</b></div>
+              <div class="legend-row"><span><i class="swatch blue"></i>Satellite</span><b>15%</b></div>
+              <div class="legend-row"><span><i class="swatch dark"></i>Gold hedge</span><b>10%</b></div>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Funds cut</span><b>6 → 4</b></div>
+            <div class="metric"><span>SIP routed</span><b>₹50k</b></div>
+            <div class="metric"><span>Existing reused</span><b>₹11.4L</b></div>
+          </div>
+          <div class="micro"><span>Current phase only</span><button>Show actions</button></div>
+        </section>
+      </div>
+      <div class="label"><b>02</b>Recommendation thesis</div>
+    </div>
+
+    <div class="cell">
+      <div class="phone">
+        <div class="brand">
+          <span class="brand-mark">Paytm <em>Money</em></span>
+          <div class="ledger-chip"><span class="dot"></span><span>6 · confirmed</span></div>
+        </div>
+        <div class="orb-wrap"><div class="orb"></div></div>
+        <div class="subtitle">
+          <div class="who">Maya</div>
+          <div class="what">"Here is the action list. Nothing happens unless you approve it."</div>
+        </div>
+        <div class="voice-chip">Fund actions · keep, switch, stop</div>
+
+        <section class="sheet">
+          <div class="eyebrow">Recommended actions</div>
+          <h2>Keep what works. Move what does not.</h2>
+          <div class="fund-stack">
+            <div class="fund-row">
+              <span class="tag keep">Keep</span>
+              <div class="fund-name">Parag Parikh Flexi Cap<small>Core equity · already held</small></div>
+              <div class="amount">₹18k</div>
+            </div>
+            <div class="fund-row">
+              <span class="tag switch">Switch</span>
+              <div class="fund-name">Large Cap A → Index Fund<small>Lower overlap · lower cost</small></div>
+              <div class="amount">₹12k</div>
+            </div>
+            <div class="fund-row">
+              <span class="tag stop">Stop</span>
+              <div class="fund-name">Small Cap Opportunities<small>3-year peer laggard</small></div>
+              <div class="amount">₹0</div>
+            </div>
+            <div class="fund-row">
+              <span class="tag keep">Add</span>
+              <div class="fund-name">HDFC Short Duration<small>Debt ballast · phase one</small></div>
+              <div class="amount">₹12.5k</div>
+            </div>
+            <div class="fund-row">
+              <span class="tag keep">Add</span>
+              <div class="fund-name">Nippon Gold ETF FoF<small>Goal hedge</small></div>
+              <div class="amount">₹7.5k</div>
+            </div>
+          </div>
+          <p class="lede">This is a recommendation layer, not execution. Maya can explain any row before you approve.</p>
+          <div class="micro"><span>Ask: "why switch that fund?"</span><button>Approve later</button></div>
+        </section>
+      </div>
+      <div class="label"><b>03</b>Fund action list</div>
+    </div>
+  </div>
+</body>
+</html>

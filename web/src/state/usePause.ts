@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { usePipecatClientMediaTrack } from "@pipecat-ai/client-react";
 
+function setMediaTrackEnabled(track: MediaStreamTrack | null | undefined, enabled: boolean) {
+  if (track) track.enabled = enabled;
+}
+
 /**
  * Tap-to-pause for Maya's audio.
  *
@@ -16,7 +20,7 @@ export function usePause(): { isPaused: boolean; togglePause: () => void } {
   const botAudio = usePipecatClientMediaTrack("audio", "bot");
 
   useEffect(() => {
-    if (botAudio) botAudio.enabled = !isPaused;
+    setMediaTrackEnabled(botAudio, !isPaused);
   }, [botAudio, isPaused]);
 
   return {

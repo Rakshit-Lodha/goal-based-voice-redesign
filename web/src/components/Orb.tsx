@@ -9,11 +9,19 @@ import type { Mood } from "../state/useMood";
  *
  * Renders as a transparent <button> so tap-to-pause is keyboard-accessible.
  */
-export default function Orb({ mood, onTap }: { mood: Mood; onTap?: () => void }) {
+export default function Orb({
+  mood,
+  onTap,
+  summoned = false,
+}: {
+  mood: Mood;
+  onTap?: () => void;
+  summoned?: boolean;
+}) {
   return (
     <button
       type="button"
-      className={`orb-stage mood-${mood}`}
+      className={`orb-stage mood-${mood}${summoned ? " is-summoned" : ""}`}
       onClick={onTap}
       aria-label={mood === "paused" ? "Resume Maya" : "Pause Maya"}
       aria-pressed={mood === "paused"}
@@ -35,6 +43,10 @@ export default function Orb({ mood, onTap }: { mood: Mood; onTap?: () => void })
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
           outline: none;
+          transition: transform var(--dur-med) var(--ease-out);
+        }
+        .orb-stage.is-summoned {
+          transform: translate(-50%, -50%) translateY(-160px) scale(0.55);
         }
         .orb-stage:focus-visible {
           /* keyboard focus only — soft champagne ring around the orb area */

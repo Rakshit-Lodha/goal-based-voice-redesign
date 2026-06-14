@@ -1,11 +1,32 @@
+type MicState = "idle" | "connecting" | "live";
+
 /**
- * Bottom-centre voice affordance. Purely informational — the mic is always
- * hot via Pipecat's enableMic on the client; this just signals "you can speak".
- * Tap-to-pause lives on the orb itself; this isn't a button.
+ * Bottom-centre voice affordance. Before the call is live, this is the one
+ * explicit browser gesture that starts WebRTC and triggers mic permission.
+ * Once connected, it becomes quiet status text.
  */
-export default function MicAffordance() {
+export default function MicAffordance({
+  state,
+  onStart,
+  onEnd,
+  error,
+}: {
+  state: MicState;
+  onStart: () => void;
+  onEnd: () => void;
+  error?: string | null;
+}) {
+  const live = state === "live";
+  const connecting = state === "connecting";
+
   return (
-    <div className="mic" aria-hidden="true">
+    <button
+      type="button"
+      className={`mic mic-${state}`}
+      onClick={live ? onEnd : onStart}
+      disabled={connecting}
+      aria-label={live ? "End call with Maya" : "Start call with Maya"}
+    >
       <svg
         className="mic-icon"
         viewBox="0 0 24 24"
@@ -21,7 +42,10 @@ export default function MicAffordance() {
         <path d="M5 11a7 7 0 0 0 14 0" />
         <path d="M12 18v3" />
       </svg>
-      <div className="mic-label">Tap or just talk</div>
+      <div className="mic-label">
+        {live ? "Live · tap to end" : connecting ? "Connecting..." : "Tap to start"}
+      </div>
+      {error && <div className="mic-error">{error}</div>}
 
       <style>{`
         .mic {
@@ -34,8 +58,18 @@ export default function MicAffordance() {
           align-items: center;
           gap: 8px;
           color: var(--ivory-soft);
+          -webkit-tap-highlight-color: transparent;
         }
-        .mic-icon { opacity: 0.7; }
+        .mic:not(:disabled):hover .mic-icon {
+          color: var(--champagne-soft);
+          opacity: 1;
+        }
+        .mic:disabled {
+          cursor: progress;
+          opacity: 0.72;
+        }
+        .mic-icon { opacity: 0.7; transition: color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out); }
+        .mic-live .mic-icon { color: var(--green-soft); opacity: 1; }
         .mic-label {
           font-size: 12px;
           font-weight: 500;
@@ -43,7 +77,14 @@ export default function MicAffordance() {
           text-transform: uppercase;
           color: var(--ivory-soft);
         }
+        .mic-error {
+          max-width: 260px;
+          color: var(--champagne-soft);
+          font-size: 11px;
+          line-height: 1.35;
+          text-align: center;
+        }
       `}</style>
-    </div>
+    </button>
   );
 }
