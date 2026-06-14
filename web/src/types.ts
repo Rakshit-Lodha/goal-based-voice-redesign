@@ -111,6 +111,9 @@ export interface Snapshot {
   plan_pdf_url: string | null;
   progress: Progress;
   last_event: string | null;
+  /** Monotonic counter — unique per state event. Used by the artifact queue
+   *  to distinguish two consecutive calls to the same tool. */
+  tick: number;
 }
 
 export type ArtifactKind =

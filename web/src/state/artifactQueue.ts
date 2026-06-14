@@ -18,13 +18,18 @@ export function useArtifactQueue() {
   const [active, setActive] = useState<ArtifactEvent | null>(null);
   const [queue, setQueue] = useState<ArtifactEvent[]>([]);
   const activeRef = useRef<ArtifactEvent | null>(null);
-  const activeToolRef = useRef<string | null>(null);
+  // The state-event tick that "anchors" the active artifact. The first state
+  // event after an artifact is summoned sets this; any subsequent state event
+  // (i.e. another tool call) advances the queue. Using tick instead of
+  // last_event name correctly handles two consecutive calls to the same
+  // tool (e.g. confirm_financial_snapshot for cashflow then for investments).
+  const activeTickRef = useRef<number | null>(null);
 
   const showNext = useCallback(() => {
     setQueue((items) => {
       const [next, ...rest] = items;
       activeRef.current = next ?? null;
-      activeToolRef.current = null;
+      activeTickRef.current = null;
       setActive(next ?? null);
       return rest;
     });
@@ -36,19 +41,19 @@ export function useArtifactQueue() {
       return;
     }
     activeRef.current = null;
-    activeToolRef.current = null;
+    activeTickRef.current = null;
     setActive(null);
   }, [queue.length, showNext]);
 
   useRtviEvent("serverMessage", (message) => {
     if (isStateEvent(message)) {
-      const lastEvent = message.payload.last_event;
-      if (!activeRef.current || !lastEvent) return;
-      if (!activeToolRef.current) {
-        activeToolRef.current = lastEvent;
+      const tick = message.payload.tick;
+      if (!activeRef.current || typeof tick !== "number") return;
+      if (activeTickRef.current === null) {
+        activeTickRef.current = tick;
         return;
       }
-      if (activeToolRef.current !== lastEvent) {
+      if (tick !== activeTickRef.current) {
         dismiss();
       }
       return;
@@ -59,14 +64,14 @@ export function useArtifactQueue() {
     console.info("[artifact]", message.kind, message.data);
     if (!activeRef.current) {
       activeRef.current = message;
-      activeToolRef.current = null;
+      activeTickRef.current = null;
       setActive(message);
       return;
     }
     // Same kind arriving while still active = a live correction (e.g. user
     // edited income, AA re-pulled). Replace in place so the visible card
-    // updates without sliding off and back on. activeToolRef stays so the
-    // next-different-tool dismiss is still deterministic.
+    // updates without sliding off and back on. activeTickRef stays so the
+    // next-tick dismiss is still deterministic.
     if (activeRef.current.kind === message.kind) {
       activeRef.current = message;
       setActive(message);

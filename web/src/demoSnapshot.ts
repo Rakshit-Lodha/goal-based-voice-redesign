@@ -97,4 +97,5 @@ export const DEMO_SNAPSHOT: Snapshot = {
   plan_pdf_url: null,
   progress: { risk: "done", family: "done", mfc: "done", aa: "done", finances: "done", goals: "done", gap: "done", portfolio_plan: "done", pdf: "pending" },
   last_event: "build_goal_portfolio",
+  tick: 999,
 };

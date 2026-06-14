@@ -61,6 +61,8 @@ def reset():
     STATE.__dict__.update(SessionState().__dict__)
     STATE.name = KYC_NAME
     STATE.age = KYC_AGE
+    global _tick
+    _tick = 0
     return STATE
 
 
@@ -173,8 +175,18 @@ def next_step() -> str:
     return "Plan is done. Summarize the 3 action items and say a warm goodbye."
 
 
+# Monotonic counter — every snapshot() call gets a fresh value so the browser
+# can distinguish two consecutive state events that happen to share the same
+# last_event (e.g. confirm_financial_snapshot called twice for the two
+# confirmation stages). The artifact queue uses this to advance the queue on
+# every distinct tool call instead of only on tool-name changes.
+_tick: int = 0
+
+
 def snapshot(last_event: str | None = None) -> dict:
     """JSON-serializable mirror of the whole session for the browser UI."""
+    global _tick
+    _tick += 1
     s = STATE
     return {
         "name": s.name,
@@ -197,6 +209,7 @@ def snapshot(last_event: str | None = None) -> dict:
         "plan_pdf_url": f"/output/{os.path.basename(s.plan_pdf_path)}" if s.plan_pdf_path else None,
         "progress": progress(),
         "last_event": last_event,
+        "tick": _tick,
     }
 
 
