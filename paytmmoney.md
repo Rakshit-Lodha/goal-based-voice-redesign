@@ -126,11 +126,12 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-5: artifact summoning + cards`
 
 ### Phase 6 — The hero takeover
-- [ ] Create `web/src/screens/PlanHero.tsx` (full cream takeover, corner champagne orb ring, 84px Fraunces SIP number, dismiss CTA)
-- [ ] Triggered by `plan_hero` artifact kind only
-- [ ] Dismiss returns to orb conversation; ledger now shows complete plan
-- [ ] Verify: the moment lands — orb shrinks to corner, ₹X SIP number takes the screen
-- [ ] Commit: `phase-6: plan hero takeover`
+- [x] Create `web/src/screens/PlanHero.tsx` (full cream takeover, corner champagne orb ring, 84px Fraunces SIP number, dismiss CTA)
+- [x] Triggered by `plan_hero` artifact kind only (special-cased in `App.tsx`; bypasses `Artifact.tsx` bottom-sheet)
+- [x] Orb gains `corner` mode — anchors top-right with a champagne ring, mutually exclusive with `summoned`
+- [x] Dismiss returns to orb conversation; ledger now shows complete plan
+- [ ] Verify live: the moment lands — orb shrinks to corner, ₹X SIP number takes the screen (next live walkthrough)
+- [x] Commit: `phase-6: plan hero takeover`
 
 ### Phase 7 — Ledger chip + panel
 - [ ] Replace ledger chip placeholder with live `Web/src/components/LedgerChip.tsx` reading STATE snapshot count

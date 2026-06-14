@@ -13,15 +13,20 @@ export default function Orb({
   mood,
   onTap,
   summoned = false,
+  corner = false,
 }: {
   mood: Mood;
   onTap?: () => void;
   summoned?: boolean;
+  /** Plan-hero takeover: shrink the orb to the top-right corner with a
+   *  champagne ring. Mutually exclusive with `summoned` — corner wins. */
+  corner?: boolean;
 }) {
+  const cls = corner ? "is-corner" : summoned ? "is-summoned" : "";
   return (
     <button
       type="button"
-      className={`orb-stage mood-${mood}${summoned ? " is-summoned" : ""}`}
+      className={`orb-stage mood-${mood}${cls ? " " + cls : ""}`}
       onClick={onTap}
       aria-label={mood === "paused" ? "Resume Maya" : "Pause Maya"}
       aria-pressed={mood === "paused"}
@@ -47,6 +52,27 @@ export default function Orb({
         }
         .orb-stage.is-summoned {
           transform: translate(-50%, -50%) translateY(-160px) scale(0.55);
+        }
+        /* Plan-hero corner: orb anchors top-right, shrunk, with a thin
+           champagne ring so it reads as "Maya is still here" while the
+           plan cream takeover holds the screen. */
+        .orb-stage.is-corner {
+          left: auto;
+          top: 28px;
+          right: 28px;
+          width: 56px;
+          height: 56px;
+          transform: none;
+          z-index: 10;
+        }
+        .orb-stage.is-corner::before {
+          content: "";
+          position: absolute;
+          inset: -7px;
+          border-radius: 50%;
+          border: 1px solid var(--champagne);
+          opacity: 0.7;
+          pointer-events: none;
         }
         .orb-stage:focus-visible {
           /* keyboard focus only — soft champagne ring around the orb area */

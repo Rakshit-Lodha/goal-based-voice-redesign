@@ -10,6 +10,7 @@ import Subtitle from "./components/Subtitle";
 import MicAffordance from "./components/MicAffordance";
 import Artifact from "./components/Artifact";
 import OtpSheet, { type OtpRequest } from "./components/OtpSheet";
+import PlanHero from "./screens/PlanHero";
 import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
 import { usePause } from "./state/usePause";
@@ -54,6 +55,7 @@ function Conversation() {
   const mood: Mood = isPaused ? "paused" : baseMood;
   const live = transportState === "connected" || transportState === "ready";
   const micState = live ? "live" : dialing ? "connecting" : "idle";
+  const isHero = active?.kind === "plan_hero";
   const hasSummonedSurface = !!active || !!otp;
 
   useRtviEvent("transportStateChanged", (state) => {
@@ -128,9 +130,18 @@ function Conversation() {
   return (
     <>
       <BrandBar />
-      <Orb mood={mood} onTap={togglePause} summoned={hasSummonedSurface} />
-      <Subtitle mood={mood} />
-      <Artifact artifact={active} queuedCount={queuedCount} onDismiss={dismiss} />
+      <Orb
+        mood={mood}
+        onTap={togglePause}
+        summoned={!isHero && hasSummonedSurface}
+        corner={isHero}
+      />
+      {!isHero && <Subtitle mood={mood} />}
+      {isHero ? (
+        <PlanHero data={active.data as never} onDismiss={dismiss} />
+      ) : (
+        <Artifact artifact={active} queuedCount={queuedCount} onDismiss={dismiss} />
+      )}
       <OtpSheet
         otp={otp}
         value={otpValue}
@@ -139,12 +150,14 @@ function Conversation() {
         onChange={setOtpValue}
         onSubmit={submitOtp}
       />
-      <MicAffordance
-        state={micState}
-        onStart={startCall}
-        onEnd={endCall}
-        error={callError}
-      />
+      {!isHero && (
+        <MicAffordance
+          state={micState}
+          onStart={startCall}
+          onEnd={endCall}
+          error={callError}
+        />
+      )}
     </>
   );
 }
