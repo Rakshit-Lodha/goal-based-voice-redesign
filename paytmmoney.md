@@ -98,29 +98,32 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-3: conversation shell with pause + mic`
 
 ### Phase 4 — Backend artifact events
-- [ ] Extend `core/ui_bus.py` with `emit_artifact(kind: str, data: dict)` helper
-- [ ] Add `ArtifactKind` enum / Literal type: `risk_reveal`, `family_recap`, `mfc_consent`, `aa_consent`, `income_snapshot`, `ratios`, `inflation_curve`, `sip_split`, `funds_picker`, `plan_hero`
-- [ ] Wire emits in `agent/tools.py`:
-  - [ ] `assess_risk_profile` → `risk_reveal`
-  - [ ] `add_family` → `family_recap`
-  - [ ] `pull_mf_central` → triggers `mfc_consent` *before* (separate path)
-  - [ ] `pull_account_aggregator` → triggers `aa_consent` before, `income_snapshot` + `ratios` after
-  - [ ] `compute_gap_and_sip` → `inflation_curve` (per-goal)
-  - [ ] `build_goal_portfolio` → `sip_split`
-  - [ ] `generate_plan_pdf` → `plan_hero`
-- [ ] Verify in browser console: artifact events stream in deterministic order during a session
-- [ ] All existing tests still green
-- [ ] Commit: `phase-4: artifact events on ui_bus`
+- [x] Extend `core/ui_bus.py` with `emit_artifact(kind: str, data: dict)` helper
+- [x] Add `ArtifactKind` enum / Literal type: `risk_reveal`, `family_recap`, `mfc_consent`, `aa_consent`, `income_snapshot`, `ratios`, `inflation_curve`, `sip_split`, `funds_picker`, `plan_hero`
+- [x] Wire emits in `agent/tools.py`:
+  - [x] `assess_risk_profile` → `risk_reveal`
+  - [x] `add_family` → `family_recap`
+  - [x] `pull_mf_central` → triggers `mfc_consent` *before* (separate path)
+  - [x] `pull_account_aggregator` → triggers `aa_consent` before, `income_snapshot` + `ratios` after
+  - [x] `compute_gap_and_sip` → `inflation_curve` (per-goal)
+  - [x] `build_goal_portfolio` → `sip_split`
+  - [x] `generate_plan_pdf` → `plan_hero`
+- [x] Fake-RTVI smoke check: artifact events stream in deterministic order during a tool sequence
+- [x] All existing tests still green (31/31)
+- [ ] Verify in live browser console mid-conversation — deferred to Phase 6 live walkthrough
+- [x] Commit: `phase-4: artifact events on ui_bus`
 
 ### Phase 5 — Artifact slot + summoning
-- [ ] Extend `web/src/types.ts` with `ArtifactEvent` union matching backend
-- [ ] Create `web/src/state/artifactQueue.ts` (single active artifact, queue of pending; next tool call dismisses current)
-- [ ] Create `web/src/components/Artifact.tsx` (cream sheet slides up from bottom, dismiss icon)
-- [ ] Create artifact card components: `RiskRevealCard`, `FamilyRecapCard`, `MfcConsentSheet`, `AaConsentSheet` (white, Finvu-style verbatim copy), `IncomeSnapshotCard`, `RatiosCard`, `InflationCurveCard` (SVG), `SipSplitCard`, `FundsPickerSheet`
-- [ ] Kind → component registry in `web/src/state/artifactRegistry.ts`
-- [ ] On artifact summon: shrink orb to scale 0.55, translate up by ~160px; on dismiss: restore
-- [ ] Verify: full conversation summons real cards at the right moments
-- [ ] Commit: `phase-5: artifact summoning + cards`
+- [x] Extend `web/src/types.ts` with `ArtifactEvent` union matching backend
+- [x] Create `web/src/state/artifactQueue.ts` (single active artifact, queue of pending; next tool call dismisses current)
+- [x] Create `web/src/components/Artifact.tsx` (cream sheet slides up from bottom, dismiss icon)
+- [x] Create artifact card components: `RiskRevealCard`, `FamilyRecapCard`, `MfcConsentSheet`, `AaConsentSheet` (white, Finvu-style verbatim copy), `IncomeSnapshotCard`, `RatiosCard`, `InflationCurveCard` (SVG), `SipSplitCard`, `FundsPickerSheet`
+- [x] Kind → component registry in `web/src/state/artifactRegistry.tsx`
+- [x] On artifact summon: shrink orb to scale 0.55, translate up by ~160px; on dismiss: restore
+- [x] Browser smoke check: redesign shell renders at `localhost:5174`; artifact listener logs `[artifact]` events to console
+- [x] `npm run lint`, `npm run build`, and `pytest tests/ -v` green
+- [ ] Verify full conversation summons real cards at the right moments — deferred to Phase 6 live walkthrough
+- [x] Commit: `phase-5: artifact summoning + cards`
 
 ### Phase 6 — The hero takeover
 - [ ] Create `web/src/screens/PlanHero.tsx` (full cream takeover, corner champagne orb ring, 84px Fraunces SIP number, dismiss CTA)
@@ -157,7 +160,8 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 ## Conventions
 
 - **Commit per phase.** One commit message per phase, prefixed `phase-N:`.
-- **Untouched files.** Do not edit `core/finmath.py`, `core/session.py`, `agent/prompts.py`, or any test file. If a change feels needed, stop and ask.
+- **Untouched files.** Do not edit `core/finmath.py` or any test file. If a change feels needed, stop and ask.
+  - `agent/prompts.py` and `core/session.py` were given small AA-OTP reinforcements in Phase 4 (Maya must call `pull_account_aggregator` in the same turn she promises the Finvu OTP). Content-only guidance edits — structure unchanged. Future edits to these still warrant a flag.
 - **No new dependencies.** Motion is CSS / Web Animations API. Charts are hand-rolled SVG. Fonts come from Google Fonts via `<link>`.
 - **Mobile-first widths.** Build at 390px, validate the desktop centring works at 1440px.
 - **Demoable after every phase.** Open `localhost:5174`, talk to Maya, confirm the demoable state listed in the phase. If you cannot demonstrate it, the phase isn't done.

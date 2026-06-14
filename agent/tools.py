@@ -57,6 +57,11 @@ async def pull_mf_central(args: dict) -> dict:
     if not args.get("user_confirmed_consent"):
         return missing("MF Central consent",
                        "Explain why MF Central is needed, ask permission to trigger the OTP, and only call this after the user agrees.")
+    await ui_bus.emit_artifact("mfc_consent", {
+        "provider": "MF Central",
+        "consent_context": args.get("consent_context"),
+        "otp_provider": "MF Central",
+    })
     otp = await consent.request_otp("MF Central")
     if str(otp).replace(" ", "") != "1234":
         return missing("the MF Central OTP",
@@ -110,6 +115,11 @@ async def pull_account_aggregator(args: dict) -> dict:
         if not args.get("user_confirmed_consent"):
             return missing("Account Aggregator consent",
                            "Explain what Account Aggregator is, what data it pulls and why it helps the plan. Ask permission to trigger the OTP, and only call this after the user agrees.")
+        await ui_bus.emit_artifact("aa_consent", {
+            "provider": "Finvu Account Aggregator",
+            "consent_context": args.get("consent_context"),
+            "otp_provider": "Finvu Account Aggregator",
+        })
         otp = await consent.request_otp("Finvu Account Aggregator")
         if str(otp).replace(" ", "") != "1234":
             return missing("the Account Aggregator OTP",
@@ -149,6 +159,15 @@ async def pull_account_aggregator(args: dict) -> dict:
     r = STATE.ratios
     aa = STATE.aa_assets
     total_outflow = STATE.monthly_expenses + STATE.monthly_emi
+    await ui_bus.emit_artifact("income_snapshot", {
+        "monthly_income": STATE.monthly_income,
+        "monthly_expenses": STATE.monthly_expenses,
+        "monthly_emi": STATE.monthly_emi,
+        "total_outflow": total_outflow,
+        "expense_breakdown": STATE.expense_breakdown,
+        "aa_assets": aa,
+    })
+    await ui_bus.emit_artifact("ratios", r)
     hint = (f"Finvu is back. Say you looked at the last three months of bank data. "
             f"Average monthly income is {STATE.monthly_income} rupees. Average monthly outflow "
             f"is {total_outflow} rupees: investments {breakdown['investments']}, EMIs "
@@ -185,6 +204,10 @@ async def add_family(args: dict) -> dict:
     if dependents_count:
         parts.append(f"{dependents_count} other dependent(s)")
     summary = "; ".join(parts) or "no immediate dependents"
+    await ui_bus.emit_artifact("family_recap", {
+        "family": STATE.family,
+        "summary": summary,
+    })
     hint = (f"Family captured — {summary}. Keep this in mind when goals come up: a young child "
             f"suggests an education goal in 18-minus-age years; the caller's own age plus "
             f"retirement age suggests a retirement goal.")
@@ -238,6 +261,7 @@ async def assess_risk_profile(args: dict) -> dict:
     STATE.risk_answers = answers
     result = fm.risk_profile_from_answers(answers)
     STATE.risk_profile = result["risk_profile"]
+    await ui_bus.emit_artifact("risk_reveal", result)
     hint = (f"The user comes out {result['risk_profile']}: roughly "
             f"{result['equity_band'] * 100:.0f} percent equity suits them, and we'll plan "
             f"with {result['expected_return'] * 100:.0f} percent expected returns.")
@@ -347,6 +371,16 @@ async def compute_gap_and_sip(args: dict) -> dict:
         "idle_surplus": idle,
         "affordability": afford,
     }
+    await ui_bus.emit_artifact("inflation_curve", {
+        "goal": goal.name,
+        "target_amount_today": goal.target_amount_today,
+        "inflated_target": goal.inflated_target,
+        "projected_from_existing": goal.projected_from_existing,
+        "gap": round(gap),
+        "horizon_years": goal.horizon_years,
+        "required_sip": goal.required_sip,
+        "expected_return_used": rate,
+    })
     hint = (f"For {goal.name} the gap needs {goal.required_sip} rupees a month. Across all goals "
             f"so far that's {total_sip} rupees against an idle surplus of {idle} — {afford}.")
     return tool_response(STATE.gap_result, hint)
@@ -428,6 +462,7 @@ async def build_goal_portfolio(args: dict) -> dict:
                             "goal horizon, using top category funds from each required category "
                             "to balance risk and return."),
     }
+    await ui_bus.emit_artifact("sip_split", STATE.proposed_portfolios[goal.name])
 
     if bucket == "long":
         hint = (f"{goal.name} is {goal.horizon_years} years — long-term, three phases. "
@@ -459,6 +494,13 @@ async def generate_plan_pdf(args: dict) -> dict:
     STATE.plan_pdf_path = path
     filename = path.split("/")[-1]
     url = f"/output/{filename}"
+    total_sip = sum(g.required_sip or 0 for g in STATE.goals if g.funded)
+    await ui_bus.emit_artifact("plan_hero", {
+        "url": url,
+        "pdf_file": filename,
+        "total_monthly_sip": total_sip,
+        "goals_count": len([g for g in STATE.goals if g.funded]),
+    })
     logger.opt(colors=True).info(f"<green>📄 PLAN PDF READY: {path}</green>")
     logger.opt(colors=True).info(f"<green>📄 Serving at: {url}</green>")
     return tool_response(
@@ -490,7 +532,7 @@ TOOL_SPECS = [
                                                  "current_value": {"type": "number"},
                                                  "monthly_sip": {"type": "number"}}}}},
      ["user_confirmed_consent", "consent_context"]),
-    (pull_account_aggregator, "Pull bank, EPF, NPS, stocks and cash flows via Finvu Account Aggregator (mocked). Call first only after Maya has explained AA, what data is pulled, why it helps, and the user explicitly agrees to trigger OTP. Later correction calls reuse consent.",
+    (pull_account_aggregator, "Pull bank, EPF, NPS, stocks and cash flows via Finvu Account Aggregator (mocked). Call first only after Maya has explained AA, what data is pulled, why it helps, and the user explicitly agrees to trigger OTP. When the user agrees to Finvu OTP, call this in the same assistant turn; do not only announce that the OTP is being triggered. Later correction calls reuse consent.",
      {"user_confirmed_consent": {"type": "boolean", "description": "True only after the user explicitly agrees to trigger the Finvu OTP"},
       "consent_context": {"type": "string", "description": "Brief summary of what Maya explained before triggering OTP"},
       "monthly_income": {"type": "number", "description": "Optional user-corrected monthly income"},

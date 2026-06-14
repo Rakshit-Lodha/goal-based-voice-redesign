@@ -5,9 +5,24 @@ snapshots through emit(), which the React client receives as server messages.
 No-ops cleanly when no UI is attached (e.g. the voice-only dev runner or tests).
 """
 
+from typing import Literal
+
 from loguru import logger
 
 _rtvi = None
+
+ArtifactKind = Literal[
+    "risk_reveal",
+    "family_recap",
+    "mfc_consent",
+    "aa_consent",
+    "income_snapshot",
+    "ratios",
+    "inflation_curve",
+    "sip_split",
+    "funds_picker",
+    "plan_hero",
+]
 
 
 def bind(rtvi) -> None:
@@ -28,3 +43,7 @@ async def emit(data: dict) -> None:
         await _rtvi.send_server_message(data)
     except Exception as e:
         logger.warning(f"ui_bus emit failed: {e}")
+
+
+async def emit_artifact(kind: ArtifactKind, data: dict) -> None:
+    await emit({"type": "artifact", "kind": kind, "data": data})

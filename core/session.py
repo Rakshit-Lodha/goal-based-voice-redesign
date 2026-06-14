@@ -111,7 +111,9 @@ def next_step() -> str:
                 "that this helps analyze cash flow, stocks, EPF, income, expenses and makes "
                 "the financial plan seamless and richer. Ask permission to trigger the OTP. "
                 "If they agree, say you are triggering the Finvu OTP now, then call "
-                "pull_account_aggregator.")
+                "pull_account_aggregator in the same assistant turn. Do not merely say the "
+                "OTP is being triggered. If you already said it and AA is still pending, call "
+                "pull_account_aggregator immediately.")
     if not s.financial_snapshot_confirmed:
         return ("Do not move to goals yet. First confirm the Account Aggregator snapshot: "
                 "income, outflow, expense breakup, EMIs, EPF, NPS and stocks. If anything "

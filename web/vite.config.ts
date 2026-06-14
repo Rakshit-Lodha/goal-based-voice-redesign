@@ -12,6 +12,7 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     proxy: {
+      "/health": "http://localhost:8001",
       "/api": "http://localhost:8001",
       "/offer": {
         target: "http://localhost:8001",
