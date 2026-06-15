@@ -1,0 +1,30 @@
+app = "goal-based-voice-redesign"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  STT_PROVIDER = "sarvam"
+  SARVAM_TTS_MODEL = "bulbul:v3"
+  SARVAM_VOICE_ID = "ritu"
+  ICE_SERVERS = "[{\"urls\":\"stun:stun.l.google.com:19302\"}]"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
