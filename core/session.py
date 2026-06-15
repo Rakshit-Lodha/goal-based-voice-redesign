@@ -51,6 +51,10 @@ class SessionState:
     plan_pdf_path: str | None = None
     # fraction of the existing corpus not yet earmarked to a goal (waterfall)
     corpus_fraction_remaining: float = 1.0
+    # Most recent total SIP across funded goals that the user has already
+    # been shown — used to emit a cascade_diff toast when a revise loop
+    # bumps the total up or down.
+    last_published_total_sip: float = 0.0
 
 
 STATE = SessionState()

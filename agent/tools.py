@@ -5,6 +5,7 @@ with narration_hint / progress / next_step on every call. Guard rails return an
 {"error", "instruction"} payload instead of raising.
 """
 
+import datetime as _dt
 import json
 import math
 
@@ -16,6 +17,7 @@ from pipecat.services.llm_service import FunctionCallParams
 
 from core import finmath as fm
 from core import consent, plan_pdf, portfolio_data, ui_bus
+from core.run_transcript import record_tool_call, record_tool_result
 from core.session import STATE, Goal, get_goal, missing, snapshot, tool_response
 
 
@@ -38,6 +40,23 @@ def _invalidate_plan_after_financial_edit(*, cashflow_changed: bool, investments
 
 def _has_any(args: dict, keys: tuple[str, ...]) -> bool:
     return any(args.get(key) is not None for key in keys)
+
+
+async def _maybe_emit_sip_cascade() -> None:
+    """If the total SIP just changed from what we last showed the user,
+    fire a cascade_diff message — the frontend renders it as a transient
+    toast ('SIP updated · ₹50,000 → ₹52,000') so the user sees the knock-on
+    of their revise immediately."""
+    new_total = sum(g.required_sip or 0 for g in STATE.goals if g.funded)
+    prev_total = STATE.last_published_total_sip
+    STATE.last_published_total_sip = new_total
+    if prev_total > 0 and new_total > 0 and abs(new_total - prev_total) >= 500:
+        await ui_bus.emit({
+            "type": "cascade_diff",
+            "label": "Monthly SIP",
+            "before": prev_total,
+            "after": new_total,
+        })
 
 
 def _fund_review(holding: dict, risk_profile: str | None) -> dict:
@@ -223,6 +242,8 @@ async def pull_account_aggregator(args: dict) -> dict:
     r = STATE.ratios
     aa = STATE.aa_assets
     total_outflow = STATE.monthly_expenses + STATE.monthly_emi
+    # Income snapshot also carries the live ratios so the card can render
+    # savings-rate and DTI bars in-place — no separate ratios artifact needed.
     await ui_bus.emit_artifact("income_snapshot", {
         "monthly_income": STATE.monthly_income,
         "monthly_expenses": STATE.monthly_expenses,
@@ -230,8 +251,8 @@ async def pull_account_aggregator(args: dict) -> dict:
         "total_outflow": total_outflow,
         "expense_breakdown": STATE.expense_breakdown,
         "aa_assets": aa,
+        "ratios": r,
     })
-    await ui_bus.emit_artifact("ratios", r)
     # Investments review: a summary trigger; the card binds to the live
     # snapshot for breakup + total, so this payload stays light.
     await ui_bus.emit_artifact("investments_review", {
@@ -395,6 +416,19 @@ async def add_goal(args: dict) -> dict:
         inflated_target=round(fm.inflate(amount, horizon, inflation)),
     )
     STATE.goals.append(goal)
+    # Emit the inflation curve immediately so the user has a visual while we
+    # discuss the just-captured target. compute_gap_and_sip will re-emit the
+    # same kind later with SIP info attached (same-kind replace in the queue).
+    if "emergency" not in name.lower():
+        target_year = _dt.datetime.now().year + horizon
+        await ui_bus.emit_artifact("inflation_curve", {
+            "goal": goal.name,
+            "target_amount_today": goal.target_amount_today,
+            "inflated_target": goal.inflated_target,
+            "horizon_years": horizon,
+            "inflation_used": inflation,
+            "target_year": target_year,
+        })
     if "emergency" in name.lower():
         hint = (f"Emergency fund captured at {amount:.0f} rupees — six months of the "
                 f"user's confirmed monthly outflow. Explain it as the first safety goal "
@@ -480,7 +514,10 @@ async def compute_gap_and_sip(args: dict) -> dict:
         "horizon_years": goal.horizon_years,
         "required_sip": goal.required_sip,
         "expected_return_used": rate,
+        "inflation_used": fm.inflation_for_goal(goal.name),
+        "target_year": _dt.datetime.now().year + goal.horizon_years,
     })
+    await _maybe_emit_sip_cascade()
     hint = (f"For {goal.name} the gap needs {goal.required_sip} rupees a month. Across all goals "
             f"so far that's {total_sip} rupees against an idle surplus of {idle} — {afford}.")
     return tool_response(STATE.gap_result, hint)
@@ -534,6 +571,7 @@ async def reprioritize(args: dict) -> dict:
         parked = [r["goal"] for r in table if r["assigned_sip"] == 0]
         hint = (f"At this budget, {', '.join(parked)} gets parked." if parked
                 else "All goals fit within this budget.")
+    await _maybe_emit_sip_cascade()
     return tool_response({"max_affordable_sip": budget, "goals": table}, hint)
 
 
@@ -690,14 +728,17 @@ def register_tools(llm) -> ToolsSchema:
 def _wrap(fn):
     """Console-log every tool call (the demo debug view) and never let one crash the call."""
     async def handler(params: FunctionCallParams):
+        arguments = dict(params.arguments)
         logger.opt(colors=True).info(
-            f"<yellow>🔧 TOOL CALL {fn.__name__}({json.dumps(dict(params.arguments))})</yellow>")
+            f"<yellow>🔧 TOOL CALL {fn.__name__}({json.dumps(arguments)})</yellow>")
+        record_tool_call(fn.__name__, arguments)
         try:
-            result = await fn(dict(params.arguments))
+            result = await fn(arguments)
         except Exception as e:
             logger.exception(f"Tool {fn.__name__} failed")
             result = {"error": str(e),
                       "instruction": "Apologize briefly and try a different step."}
+        record_tool_result(fn.__name__, result)
         logger.opt(colors=True).info(
             f"<cyan>🔧 TOOL RESULT {fn.__name__} → {json.dumps(result, default=str)[:600]}</cyan>")
         await params.result_callback(result)

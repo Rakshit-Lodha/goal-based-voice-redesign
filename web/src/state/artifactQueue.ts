@@ -24,12 +24,16 @@ export function useArtifactQueue() {
   // last_event name correctly handles two consecutive calls to the same
   // tool (e.g. confirm_financial_snapshot for cashflow then for investments).
   const activeTickRef = useRef<number | null>(null);
+  // Highest tick seen so far. When showNext promotes a queued artifact, we
+  // anchor to this so the next tool call dismisses it immediately — otherwise
+  // the queue would need two ticks per advance (anchor + dismiss).
+  const latestTickRef = useRef<number | null>(null);
 
   const showNext = useCallback(() => {
     setQueue((items) => {
       const [next, ...rest] = items;
       activeRef.current = next ?? null;
-      activeTickRef.current = null;
+      activeTickRef.current = next ? latestTickRef.current : null;
       setActive(next ?? null);
       return rest;
     });
@@ -48,6 +52,7 @@ export function useArtifactQueue() {
   useRtviEvent("serverMessage", (message) => {
     if (isStateEvent(message)) {
       const tick = message.payload.tick;
+      if (typeof tick === "number") latestTickRef.current = tick;
       if (!activeRef.current || typeof tick !== "number") return;
       if (activeTickRef.current === null) {
         activeTickRef.current = tick;

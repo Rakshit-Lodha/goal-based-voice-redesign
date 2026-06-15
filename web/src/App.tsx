@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { TransportState } from "@pipecat-ai/client-js";
 import { PipecatClientProvider, PipecatClientAudio, usePipecatClient } from "@pipecat-ai/client-react";
@@ -11,6 +11,7 @@ import MicAffordance from "./components/MicAffordance";
 import Artifact from "./components/Artifact";
 import OtpSheet, { type OtpRequest } from "./components/OtpSheet";
 import LedgerPanel from "./components/LedgerPanel";
+import CascadeToast, { type CascadeDiff } from "./components/CascadeToast";
 import PlanHero from "./screens/PlanHero";
 import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
@@ -18,7 +19,7 @@ import { usePause } from "./state/usePause";
 import { useArtifactQueue } from "./state/artifactQueue";
 import { useStateSnapshot } from "./state/useStateSnapshot";
 import { toLedgerRows } from "./state/ledgerRows";
-import type { OtpRequestEvent, ServerMessage } from "./types";
+import type { CascadeDiffEvent, OtpRequestEvent, ServerMessage } from "./types";
 
 export default function App() {
   const client = useMemo(() => createClient(), []);
@@ -58,6 +59,8 @@ function Conversation() {
   const [otpValue, setOtpValue] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpSubmitting, setOtpSubmitting] = useState(false);
+  const [cascade, setCascade] = useState<CascadeDiff | null>(null);
+  const cascadeTimerRef = useRef<number | null>(null);
   const mood: Mood = isPaused ? "paused" : baseMood;
   const live = transportState === "connected" || transportState === "ready";
   const micState = live ? "live" : dialing ? "connecting" : "idle";
@@ -84,8 +87,18 @@ function Conversation() {
       setOtpValue("");
       setOtpError(null);
       setOtpSubmitting(false);
+      return;
+    }
+    if (isCascadeDiff(msg)) {
+      if (cascadeTimerRef.current !== null) window.clearTimeout(cascadeTimerRef.current);
+      setCascade({ label: msg.label, before: msg.before, after: msg.after });
+      cascadeTimerRef.current = window.setTimeout(() => setCascade(null), 3500);
     }
   });
+
+  useEffect(() => () => {
+    if (cascadeTimerRef.current !== null) window.clearTimeout(cascadeTimerRef.current);
+  }, []);
 
   const startCall = useCallback(async () => {
     if (!client || dialing || live) return;
@@ -108,12 +121,18 @@ function Conversation() {
     await client?.disconnect();
   }, [client]);
 
-  const onRevise = useCallback((key: string) => {
-    // Phase 7 only surfaces the intent — Phase 8 wires the synthetic user
-    // input back to Pipecat so Maya picks it up conversationally.
+  const onRevise = useCallback(async (key: string) => {
     setLedgerOpen(false);
-    console.info("[ledger.revise]", key);
-  }, []);
+    if (!live || !client) return;
+    try {
+      await client.sendText(`I want to update my ${key}.`, {
+        run_immediately: true,
+        audio_response: true,
+      });
+    } catch (error) {
+      console.error("[ledger.revise] sendText failed", error);
+    }
+  }, [client, live]);
 
   const submitOtp = useCallback(async (event: FormEvent) => {
     event.preventDefault();
@@ -146,8 +165,8 @@ function Conversation() {
       <Orb
         mood={mood}
         onTap={togglePause}
-        summoned={!isHero && hasSummonedSurface}
-        corner={isHero}
+        summoned={hasSummonedSurface}
+        corner={false}
       />
       {!isHero && <Subtitle mood={mood} />}
       {isHero ? (
@@ -169,6 +188,7 @@ function Conversation() {
         onClose={() => setLedgerOpen(false)}
         onRevise={onRevise}
       />
+      {cascade && <CascadeToast diff={cascade} />}
       {!isHero && (
         <MicAffordance
           state={micState}
@@ -183,4 +203,10 @@ function Conversation() {
 
 function isOtpRequest(message: ServerMessage): message is OtpRequestEvent {
   return message.type === "otp_request" && !!message.payload;
+}
+
+function isCascadeDiff(message: ServerMessage): message is CascadeDiffEvent {
+  return message.type === "cascade_diff"
+    && typeof (message as CascadeDiffEvent).before === "number"
+    && typeof (message as CascadeDiffEvent).after === "number";
 }

@@ -29,6 +29,7 @@ type IncomeData = {
   total_outflow?: number;
   expense_breakdown?: ExpenseBreakdown;
   aa_assets?: AaAssets;
+  ratios?: Ratios;
 };
 
 type InflationData = {
@@ -39,6 +40,8 @@ type InflationData = {
   gap?: number;
   horizon_years?: number;
   required_sip?: number;
+  inflation_used?: number;
+  target_year?: number;
 };
 
 type InvestmentsData = {
@@ -218,6 +221,7 @@ export function IncomeSnapshotCard({ data }: { data: IncomeData }) {
   const income = snapshot?.monthly_income ?? data.monthly_income ?? 0;
   const emi = snapshot?.monthly_emi ?? data.monthly_emi ?? 0;
   const breakdown = snapshot?.expense_breakdown ?? data.expense_breakdown ?? null;
+  const ratios = snapshot?.ratios ?? data.ratios ?? null;
 
   // Map the backend's 5-category breakdown onto the affluent reading:
   // necessary = household + utilities, discretionary = entertainment,
@@ -234,6 +238,11 @@ export function IncomeSnapshotCard({ data }: { data: IncomeData }) {
     { label: "Investments", value: investments },
     { label: "EMIs", value: emi },
   ];
+
+  const sRate = ratios?.savings_rate ?? 0;
+  const dRate = ratios?.debt_to_income ?? 0;
+  const sBand = (ratios?.savings_band ?? "average").toLowerCase();
+  const dBand = (ratios?.dti_band ?? "average").toLowerCase();
 
   return (
     <section className="cashflow">
@@ -255,6 +264,31 @@ export function IncomeSnapshotCard({ data }: { data: IncomeData }) {
         <span>Total outflow</span>
         <b>{inr(totalOutflow)}</b>
       </div>
+
+      {ratios && (
+        <div className="cashflow-posture">
+          <PostureRow
+            label="Savings rate"
+            valueLabel={`${Math.round(sRate * 100)} %`}
+            bandLabel={sBand.toUpperCase()}
+            bandTone={bandTone(sBand)}
+            zonePosition={Math.min(1, Math.max(0, sRate))}
+            zones={["Low", "Healthy", "Strong"]}
+          />
+          <PostureRow
+            label="Debt-to-income"
+            valueLabel={`${Math.round(dRate * 100)} %`}
+            bandLabel={dtiBadge(dBand)}
+            bandTone={bandTone(dBand, true)}
+            zonePosition={Math.min(1, Math.max(0, dRate / 0.30))}
+            zones={["Comfortable", "Watch", "High"]}
+          />
+          <p className="posture-foot">
+            You have {inr(ratios.idle_surplus)}/month in idle surplus.
+            Maya will route this toward your goals.
+          </p>
+        </div>
+      )}
 
       <style>{`
         .cashflow .artifact-card-title.xl { font-size: 36px; line-height: 1.04; max-width: none; }
@@ -301,64 +335,8 @@ export function IncomeSnapshotCard({ data }: { data: IncomeData }) {
           font-size: 36px;
           letter-spacing: -0.01em;
         }
-      `}</style>
-    </section>
-  );
-}
-
-/**
- * "Healthy across the board." — the financial posture card.
- *
- * Two horizontal zone bars with a dot at the live value, an uppercased
- * band badge on the right, and the idle-surplus close-out at the bottom.
- * Snapshot-bound for live updates after a correction.
- */
-export function RatiosCard({ data }: { data: Ratios }) {
-  const snapshot = useStateSnapshot();
-  const ratios = snapshot?.ratios ?? data;
-
-  const sRate = ratios.savings_rate ?? 0;
-  const dRate = ratios.debt_to_income ?? 0;
-
-  const sBand = (ratios.savings_band ?? "average").toLowerCase();
-  const dBand = (ratios.dti_band ?? "average").toLowerCase();
-
-  const title = sBand === "good" && dBand === "good"
-    ? "Healthy across the board."
-    : "Worth a closer look.";
-
-  return (
-    <section className="posture">
-      <div className="artifact-card-eyebrow">Your financial posture</div>
-      <h2 className="artifact-card-title xl">{title}</h2>
-
-      <PostureRow
-        label="Savings rate"
-        valueLabel={`${Math.round(sRate * 100)} %`}
-        bandLabel={sBand.toUpperCase()}
-        bandTone={bandTone(sBand)}
-        zonePosition={Math.min(1, Math.max(0, sRate))}
-        zones={["Low", "Healthy", "Strong"]}
-      />
-
-      <PostureRow
-        label="Debt-to-income"
-        valueLabel={`${Math.round(dRate * 100)} %`}
-        bandLabel={dtiBadge(dBand)}
-        bandTone={bandTone(dBand, true)}
-        // DTI bar visually spans 0–30% — anything past 30% sits at the end.
-        zonePosition={Math.min(1, Math.max(0, dRate / 0.30))}
-        zones={["Comfortable", "Watch", "High"]}
-      />
-
-      <p className="posture-foot">
-        You have {inr(ratios.idle_surplus)}/month in idle surplus.
-        Maya will route this toward your goals.
-      </p>
-
-      <style>{`
-        .posture .artifact-card-title.xl { font-size: 36px; line-height: 1.04; max-width: none; }
-        .posture-foot {
+        .cashflow-posture { margin-top: 30px; }
+        .cashflow-posture .posture-foot {
           margin: 22px 0 0;
           color: var(--ink-soft);
           font-size: 13px;
@@ -619,30 +597,192 @@ export function InvestmentsCard(_props: { data: InvestmentsData }) {
 }
 
 export function InflationCurveCard({ data }: { data: InflationData }) {
+  const snapshot = useStateSnapshot();
+  // Prefer live snapshot values for the named goal so updates from
+  // compute_gap_and_sip flow in without re-summoning the artifact.
+  const liveGoal = snapshot?.goals.find((g) => g.name === data.goal);
+  const targetToday = data.target_amount_today ?? 0;
+  const targetFuture = liveGoal?.inflated_target ?? data.inflated_target ?? targetToday;
+  const horizon = data.horizon_years ?? 1;
+  const inflation = data.inflation_used ?? 0;
+  const year = data.target_year ?? new Date().getFullYear() + horizon;
+  const todayYear = year - horizon;
+  const sip = liveGoal?.required_sip ?? data.required_sip ?? null;
+
+  const eyebrow = `${(data.goal ?? "Goal").toUpperCase()} · ${year}`;
+  const inflPct = Math.round(inflation * 100);
+  const description = inflation > 0
+    ? `${assetClass(data.goal)} compound at ~${inflPct}% a year. ${inr(targetToday)} today will cost ${inr(targetFuture)} by ${year}.`
+    : `${inr(targetToday)} set aside as a safety net for the next ${horizon} year${horizon === 1 ? "" : "s"}.`;
+
   return (
-    <section>
-      <div className="artifact-card-eyebrow">{data.goal ?? "Goal"} target</div>
-      <h2 className="artifact-card-title">{inr(data.inflated_target)} in {yearsLabel(data.horizon_years)}</h2>
-      <svg className="artifact-curve" viewBox="0 0 320 110" role="img" aria-label="Inflation curve">
-        <defs>
-          <linearGradient id="curveFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="#C9A961" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#C9A961" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <line x1="0" y1="100" x2="320" y2="100" stroke="#D8CFBC" />
-        <path d="M 0 90 Q 100 86 160 68 T 320 14 L 320 100 L 0 100 Z" fill="url(#curveFill)" />
-        <path d="M 0 90 Q 100 86 160 68 T 320 14" stroke="#B89548" strokeWidth="2" fill="none" />
-        <circle cx="0" cy="90" r="3.5" fill="#1A1F2E" />
-        <circle cx="320" cy="14" r="4.5" fill="#C9A961" />
-      </svg>
-      <div className="artifact-metrics">
-        <Metric label="Today" value={inr(data.target_amount_today)} />
-        <Metric label="SIP needed" value={inr(data.required_sip)} />
-        <Metric label="Existing corpus" value={inr(data.projected_from_existing)} />
-        <Metric label="Gap" value={inr(data.gap)} />
+    <section className="inflation-curve">
+      <div className="artifact-card-eyebrow">{eyebrow}</div>
+      <h2 className="artifact-card-title xl">{inr(targetFuture)}</h2>
+      <p className="artifact-card-lede">{description}</p>
+
+      <CurveChart
+        startYear={todayYear}
+        startValue={targetToday}
+        endValue={targetFuture}
+      />
+
+      <div className="curve-boxes">
+        <div className="curve-box">
+          <span>Today</span>
+          <b>{inr(targetToday)}</b>
+        </div>
+        <div className="curve-box">
+          <span>In {horizon} year{horizon === 1 ? "" : "s"}</span>
+          <b>{inr(targetFuture)}</b>
+        </div>
       </div>
+
+      {sip ? (
+        <p className="curve-foot">
+          Monthly SIP for this goal · <b>{inr(sip)}</b>
+        </p>
+      ) : (
+        <p className="curve-foot muted">Maya will attach an investment plan next.</p>
+      )}
+
+      <style>{`
+        .inflation-curve .artifact-card-title.xl {
+          font-size: 56px;
+          line-height: 1;
+          letter-spacing: -0.02em;
+          margin-top: 4px;
+        }
+        .inflation-curve .artifact-card-lede {
+          margin-top: 16px;
+          color: var(--ink-soft);
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .curve-boxes {
+          margin-top: 20px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        .curve-box {
+          background: var(--cream-deep);
+          border-radius: 14px;
+          padding: 14px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .curve-box span {
+          color: var(--ink-soft);
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+        .curve-box b {
+          font-family: var(--font-display);
+          font-weight: 400;
+          font-size: 22px;
+          color: var(--ink);
+          letter-spacing: -0.01em;
+        }
+        .curve-foot {
+          margin: 18px 0 0;
+          font-size: 13px;
+          color: var(--ink-soft);
+        }
+        .curve-foot b {
+          color: var(--champagne);
+          font-family: var(--font-display);
+          font-weight: 400;
+          font-size: 15px;
+        }
+        .curve-foot.muted { font-style: italic; }
+      `}</style>
     </section>
+  );
+}
+
+function assetClass(goalName?: string): string {
+  const n = (goalName ?? "").toLowerCase();
+  if (/education|college|school|study|studies|mba|degree/.test(n)) return "Education costs";
+  if (/house|home|property|flat|apartment|plot/.test(n)) return "Property prices";
+  if (/car|vehicle|bike/.test(n)) return "Vehicle prices";
+  return "Costs";
+}
+
+/**
+ * Inflation curve chart — exponential growth from start year/value to end
+ * year/value. Computed from inflation rate; if the rate is zero, falls back
+ * to a flat line. Endpoints labelled below the curve.
+ */
+function CurveChart({ startYear, startValue, endValue }:
+  { startYear: number; startValue: number; endValue: number }) {
+  const W = 320;
+  const H = 140;
+  const padX = 24;
+  const padTop = 18;
+  const padBot = 30;
+  const usableW = W - padX * 2;
+  const usableH = H - padTop - padBot;
+
+  // Build curve as an exponential between (0, startValue) and (1, endValue).
+  // value(t) = startValue * (endValue/startValue)^t
+  const ratio = startValue > 0 ? endValue / startValue : 1;
+  const pts: Array<[number, number]> = [];
+  const N = 24;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const v = startValue * Math.pow(ratio, t);
+    const x = padX + t * usableW;
+    const y = padTop + (1 - (v - startValue) / Math.max(1, endValue - startValue)) * usableH;
+    pts.push([x, y]);
+  }
+  const path = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const fill = `${path} L ${padX + usableW} ${padTop + usableH} L ${padX} ${padTop + usableH} Z`;
+  const [x0, y0] = pts[0];
+  const [x1, y1] = pts[pts.length - 1];
+
+  return (
+    <svg className="curve-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Inflation curve">
+      <defs>
+        <linearGradient id="curveFill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="#C9A961" stopOpacity="0.30" />
+          <stop offset="100%" stopColor="#C9A961" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* dashed baseline + midline */}
+      <line x1={padX} y1={padTop + usableH} x2={padX + usableW} y2={padTop + usableH}
+            stroke="#D8CFBC" strokeDasharray="3 4" />
+      <line x1={padX} y1={padTop + usableH / 2} x2={padX + usableW} y2={padTop + usableH / 2}
+            stroke="#E6DCC4" strokeDasharray="3 4" />
+
+      <path d={fill} fill="url(#curveFill)" />
+      <path d={path} stroke="#B89548" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+
+      {/* start point */}
+      <circle cx={x0} cy={y0} r="4" fill="#1A1F2E" />
+      <text x={x0 + 10} y={y0 + 14} className="curve-label">
+        {startYear} · {inr(startValue)}
+      </text>
+
+      {/* end point */}
+      <circle cx={x1} cy={y1} r="5" fill="#C9A961" />
+      <text x={x1 - 6} y={y1 - 10} textAnchor="end" className="curve-label end">
+        {inr(endValue)}
+      </text>
+
+      <style>{`
+        .curve-svg { display: block; width: 100%; margin-top: 22px; }
+        .curve-label {
+          fill: var(--ink-soft);
+          font-size: 10px;
+          letter-spacing: 0.04em;
+          font-family: var(--font-sans);
+        }
+        .curve-label.end { fill: var(--champagne); font-weight: 600; }
+      `}</style>
+    </svg>
   );
 }
 

@@ -141,11 +141,11 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-7: ledger chip + panel`
 
 ### Phase 8 — Revise loop
-- [ ] Wire `Revise <key>` row tap → send synthetic user input via Pipecat (`"I want to update my <key>"`)
-- [ ] Maya catches it conversationally and asks the right follow-up
-- [ ] On state mutation, if downstream computations are affected (income → SIP, risk → glide), emit a `cascade_diff` artifact: toast showing "SIP updated · ₹50,000 → ₹52,000"
-- [ ] Verify: revise from ledger, Maya responds in voice, ledger + plan update
-- [ ] Commit: `phase-8: revise loop with cascade diff toast`
+- [x] Wire `Revise <key>` row tap → send synthetic user input via Pipecat (`client.sendText("I want to update my <key>.", { run_immediately: true, audio_response: true })`)
+- [x] Maya catches it conversationally and asks the right follow-up (LLM handles the natural-language re-entry)
+- [x] On state mutation, if downstream computations are affected, emit `cascade_diff` server message → `CascadeToast`: bottom pill showing "Monthly SIP updated · ₹50,000 ↑ ₹52,000". Auto-dismisses after 3.5s (resolved open question #3). Fires from `compute_gap_and_sip` + `reprioritize` via `_maybe_emit_sip_cascade`; ≥₹500 change threshold dodges rounding noise.
+- [ ] Verify live: revise from ledger, Maya picks up the cue in voice, cascade toast fires on the new total (next walkthrough)
+- [x] Commit: `phase-8: revise loop with cascade diff toast`
 
 ### Phase 9 — Polish
 - [ ] Motion timing pass — every transition feels ≥600ms ease-out, no bounce
@@ -191,7 +191,7 @@ Open `http://localhost:5174` for the redesign.
 
 1. ~~**Phone frame chrome on desktop**~~ — **resolved Phase 1:** clean rounded rectangle. Full device mockup competes with the orb visually and reads kitsch at the affluent register.
 2. **Goal tile icons** — line illustrations (champagne stroke on cream) confirmed; revisit if they read too restrained at real size.
-3. **Cascade diff toast persistence** — 3s auto-dismiss vs sticky until tapped. Decide during Phase 8.
+3. ~~**Cascade diff toast persistence**~~ — **resolved Phase 8:** 3.5s auto-dismiss. The toast is informative, not actionable — a sticky pill would compete with the orb mid-conversation. ≥₹500 change threshold filters rounding noise.
 4. ~~**Ledger panel gesture**~~ — **resolved Phase 7:** tap chip only. Voice-first means hands are free for taps; a swipe-down anywhere would conflict visually with orb tap-to-pause and create accidental panel reveals mid-conversation.
 
 ---

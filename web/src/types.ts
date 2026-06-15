@@ -123,7 +123,6 @@ export type ArtifactKind =
   | "mfc_review"
   | "aa_consent"
   | "income_snapshot"
-  | "ratios"
   | "investments_review"
   | "inflation_curve"
   | "sip_split"
@@ -149,4 +148,11 @@ export interface OtpRequestEvent {
   };
 }
 
-export type ServerMessage = ArtifactEvent | StateEvent | OtpRequestEvent | { type: string; [key: string]: unknown };
+export interface CascadeDiffEvent {
+  type: "cascade_diff";
+  label: string;
+  before: number;
+  after: number;
+}
+
+export type ServerMessage = ArtifactEvent | StateEvent | OtpRequestEvent | CascadeDiffEvent | { type: string; [key: string]: unknown };
