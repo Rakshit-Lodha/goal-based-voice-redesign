@@ -25,8 +25,10 @@ from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.transports.base_transport import TransportParams
 from pipecat.transports.smallwebrtc.connection import SmallWebRTCConnection
 from pipecat.transports.smallwebrtc.request_handler import (
+    IceCandidate,
     SmallWebRTCRequest,
     SmallWebRTCRequestHandler,
+    SmallWebRTCPatchRequest,
 )
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 
@@ -89,6 +91,23 @@ async def offer(request: dict):
         SmallWebRTCRequest.from_dict(request), on_connection
     )
     return answer
+
+
+@app.patch("/api/offer")
+async def offer_patch(request: dict):
+    """WebRTC trickle ICE: add browser ICE candidates to the existing peer connection."""
+    candidates = [
+        IceCandidate(
+            candidate=item["candidate"],
+            sdp_mid=item.get("sdp_mid", item.get("sdpMid")),
+            sdp_mline_index=item.get("sdp_mline_index", item.get("sdpMLineIndex")),
+        )
+        for item in request.get("candidates", [])
+    ]
+    await _webrtc.handle_patch_request(
+        SmallWebRTCPatchRequest(pc_id=request["pc_id"], candidates=candidates)
+    )
+    return {"ok": True}
 
 
 @app.post("/api/otp")
