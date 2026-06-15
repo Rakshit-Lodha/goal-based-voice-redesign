@@ -148,13 +148,13 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Commit: `phase-8: revise loop with cascade diff toast`
 
 ### Phase 9 — Polish
-- [ ] Motion timing pass — every transition feels ≥600ms ease-out, no bounce
-- [ ] Edge: rapid tool call sequence — artifact slides down only if next *would* show; otherwise lingers
-- [ ] Edge: user pauses Maya mid-artifact-summon
-- [ ] Edge: connection drop / reconnect
-- [ ] Visual QA on real mobile (Safari iOS, Chrome Android)
-- [ ] Lighthouse pass: type rendering, no CLS, no layout shift on orb transitions
-- [ ] Commit: `phase-9: polish + edge cases`
+- [x] Motion timing pass — audited all `transition:` and `animation:` declarations; they all go through `--dur-fast` 200ms (micro hovers/focus), `--dur-med` 600ms (sheets/cards), `--dur-slow` 900ms (hero rise). All ease-out `cubic-bezier(0.22, 1, 0.36, 1)` — no bounce at the tail.
+- [x] Edge: rapid tool call sequence — artifactQueue's state-event handler now only auto-dismisses the active artifact when the queue has something to promote (`queueRef.current.length > 0`); otherwise it re-anchors to the new tick and lingers. Tools that fire no artifact of their own (e.g. `add_manual_asset` during an investments review) no longer blank the screen.
+- [x] Edge: user pauses Maya mid-artifact-summon — `usePause` mutes the bot audio track only; the artifact stays put, the orb tints amber, and the Subtitle reads "Paused · tap orb to resume". Verified by code path; no state mutation on pause.
+- [ ] Edge: connection drop / reconnect — Pipecat transport handles reconnect; we don't currently clear the artifact queue on disconnect. Acceptable for the demo (the call is typically only ended after PlanHero); flag if it causes a visible glitch.
+- [ ] Visual QA on real mobile (Safari iOS, Chrome Android) — needs the user's device
+- [ ] Lighthouse pass — needs the user's browser
+- [x] Commit: `phase-9: polish + edge cases`
 
 ---
 

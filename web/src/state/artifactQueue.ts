@@ -17,6 +17,9 @@ function isStateEvent(message: unknown): message is StateEvent {
 export function useArtifactQueue() {
   const [active, setActive] = useState<ArtifactEvent | null>(null);
   const [queue, setQueue] = useState<ArtifactEvent[]>([]);
+  // Mirror of `queue` so the rtvi-event closure always reads the latest length
+  // without needing to re-register; we update it everywhere we update `queue`.
+  const queueRef = useRef<ArtifactEvent[]>([]);
   const activeRef = useRef<ArtifactEvent | null>(null);
   // The state-event tick that "anchors" the active artifact. The first state
   // event after an artifact is summoned sets this; any subsequent state event
@@ -35,6 +38,7 @@ export function useArtifactQueue() {
       activeRef.current = next ?? null;
       activeTickRef.current = next ? latestTickRef.current : null;
       setActive(next ?? null);
+      queueRef.current = rest;
       return rest;
     });
   }, []);
@@ -59,7 +63,14 @@ export function useArtifactQueue() {
         return;
       }
       if (tick !== activeTickRef.current) {
-        dismiss();
+        // Linger if nothing's waiting in the queue — tools like
+        // add_manual_asset emit a state event but no artifact, and the user
+        // is still discussing the visible card. Only auto-advance when
+        // there's something concrete to show next. The manual close button
+        // (and consent/same-kind replacements on new arrivals) still let
+        // the user move past it.
+        if (queueRef.current.length > 0) dismiss();
+        else activeTickRef.current = tick;
       }
       return;
     }
@@ -93,7 +104,11 @@ export function useArtifactQueue() {
       setActive(message);
       return;
     }
-    setQueue((items) => [...items, message]);
+    setQueue((items) => {
+      const next = [...items, message];
+      queueRef.current = next;
+      return next;
+    });
   });
 
   return useMemo(() => ({ active, queuedCount: queue.length, dismiss }), [active, queue.length, dismiss]);
