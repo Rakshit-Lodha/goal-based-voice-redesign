@@ -9,6 +9,7 @@ Run:  python server.py     (or: uvicorn server:app --port 8000)
 """
 
 import asyncio
+import json
 import os
 
 from dotenv import load_dotenv
@@ -24,6 +25,7 @@ from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.transports.base_transport import TransportParams
 from pipecat.transports.smallwebrtc.connection import SmallWebRTCConnection
+from aiortc import RTCIceServer
 from pipecat.transports.smallwebrtc.request_handler import (
     IceCandidate,
     SmallWebRTCRequest,
@@ -55,7 +57,14 @@ app.add_middleware(
 # Serve generated plan PDFs at /output/<file>.
 app.mount("/output", StaticFiles(directory=OUTPUT_DIR), name="output")
 
-_webrtc = SmallWebRTCRequestHandler()
+def _ice_servers() -> list[RTCIceServer]:
+    configured = os.getenv("ICE_SERVERS")
+    if configured:
+        return [RTCIceServer(**item) for item in json.loads(configured)]
+    return [RTCIceServer(urls="stun:stun.l.google.com:19302")]
+
+
+_webrtc = SmallWebRTCRequestHandler(ice_servers=_ice_servers())
 
 
 def _params() -> TransportParams:
