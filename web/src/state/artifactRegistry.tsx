@@ -4,6 +4,8 @@ import {
   AaConsentSheet,
   FamilyRecapCard,
   FundsPickerSheet,
+  GoalsRecapCard,
+  GoalTypesPickerCard,
   IncomeSnapshotCard,
   InflationCurveCard,
   InvestmentsCard,
@@ -30,6 +32,10 @@ export function renderArtifact(event: ArtifactEvent): ReactNode {
       return <IncomeSnapshotCard data={event.data as never} />;
     case "investments_review":
       return <InvestmentsCard data={event.data as never} />;
+    case "goal_types_picker":
+      return <GoalTypesPickerCard data={event.data as never} />;
+    case "goals_recap":
+      return <GoalsRecapCard data={event.data as never} />;
     case "inflation_curve":
       return <InflationCurveCard data={event.data as never} />;
     case "sip_split":

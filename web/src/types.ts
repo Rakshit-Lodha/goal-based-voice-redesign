@@ -124,6 +124,8 @@ export type ArtifactKind =
   | "aa_consent"
   | "income_snapshot"
   | "investments_review"
+  | "goal_types_picker"
+  | "goals_recap"
   | "inflation_curve"
   | "sip_split"
   | "funds_picker"

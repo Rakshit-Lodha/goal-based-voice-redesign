@@ -67,6 +67,9 @@ def reset():
     STATE.age = KYC_AGE
     global _tick
     _tick = 0
+    # Clear the re-summon cache so a fresh call doesn't replay last call's data.
+    from core import ui_bus
+    ui_bus.reset_artifact_cache()
     return STATE
 
 

@@ -596,6 +596,297 @@ export function InvestmentsCard(_props: { data: InvestmentsData }) {
   );
 }
 
+/**
+ * Goal-types picker — emitted as Stage 5 opens.
+ *
+ * Visual menu of the six goal categories Maya plans, grouped by Safety /
+ * Long-term independence / Aspirations. Two are tagged "Recommended" — the
+ * defaults Maya auto-plans for every caller (Emergency, Retirement). Not
+ * interactive (voice drives the conversation); this is the visual anchor
+ * while Maya frames the goals stage.
+ */
+type GoalType = {
+  key: string;
+  label: string;
+  section: string;
+  blurb: string;
+};
+
+export function GoalTypesPickerCard({
+  data,
+}: {
+  data: { types?: GoalType[]; recommended?: string[] };
+}) {
+  const types = data.types ?? [];
+  const recommended = new Set(data.recommended ?? []);
+  const sections: string[] = [];
+  const byKey = new Map<string, GoalType[]>();
+  for (const t of types) {
+    if (!byKey.has(t.section)) {
+      sections.push(t.section);
+      byKey.set(t.section, []);
+    }
+    byKey.get(t.section)!.push(t);
+  }
+
+  return (
+    <section className="goal-picker">
+      <div className="artifact-card-eyebrow">Stage three of three</div>
+      <h2 className="artifact-card-title xl">
+        What are we<br />planning for?
+      </h2>
+      <p className="artifact-card-lede">
+        Three buckets, six common goals. Maya plans the first two by default —
+        the rest, you choose by speaking.
+      </p>
+
+      <div className="picker-sections">
+        {sections.map((section) => (
+          <div key={section} className="picker-section">
+            <div className="picker-section-label">{section}</div>
+            <ul className="picker-rows">
+              {byKey.get(section)!.map((t) => (
+                <li key={t.key}>
+                  <div className="picker-row-head">
+                    <span className="picker-name">{t.label}</span>
+                    {recommended.has(t.key) && (
+                      <span className="picker-tag">Recommended</span>
+                    )}
+                  </div>
+                  <p className="picker-blurb">{t.blurb}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        .goal-picker .artifact-card-title.xl { font-size: 36px; line-height: 1.04; max-width: none; }
+        .picker-sections {
+          margin-top: 22px;
+          display: grid;
+          gap: 18px;
+        }
+        .picker-section-label {
+          color: var(--ink-soft);
+          font-size: 10px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+        .picker-rows {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          display: grid;
+          gap: 0;
+        }
+        .picker-rows li {
+          padding: 12px 0;
+          border-bottom: 1px solid var(--cream-deep);
+        }
+        .picker-rows li:last-child { border-bottom: none; }
+        .picker-row-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .picker-name {
+          font-family: var(--font-display);
+          font-size: 17px;
+          color: var(--ink);
+        }
+        .picker-tag {
+          font-size: 9px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #B89548;
+          background: rgba(201, 169, 97, 0.16);
+          border-radius: 999px;
+          padding: 3px 8px;
+        }
+        .picker-blurb {
+          margin: 4px 0 0;
+          color: var(--ink-soft);
+          font-size: 12px;
+          line-height: 1.45;
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/**
+ * Goals recap — the "Where we're heading" card.
+ *
+ * On-demand summary of every captured goal. Maya summons it via
+ * show_artifact("goals_recap") when the user asks "what are we planning"
+ * or any equivalent. Snapshot-bound so reprioritizations show through.
+ */
+type GoalsRecapRow = {
+  name: string;
+  priority: number;
+  horizon_years: number;
+  target_year: number;
+  target_amount_today: number;
+  inflated_target: number;
+  required_sip: number | null;
+  funded: boolean;
+};
+
+export function GoalsRecapCard({
+  data,
+}: {
+  data: { goals?: GoalsRecapRow[]; total_inflated?: number; total_sip?: number };
+}) {
+  const snapshot = useStateSnapshot();
+  // Prefer live snapshot so reprioritize edits show through without a
+  // re-summon. Falls back to the payload when snapshot isn't ready.
+  const liveGoals = snapshot?.goals ?? [];
+  const rows: GoalsRecapRow[] = liveGoals.length > 0
+    ? liveGoals
+        .slice()
+        .sort((a, b) => a.priority - b.priority)
+        .map((g) => ({
+          name: g.name,
+          priority: g.priority,
+          horizon_years: g.horizon_years,
+          target_year: new Date().getFullYear() + g.horizon_years,
+          target_amount_today: g.target_amount_today,
+          inflated_target: g.inflated_target ?? g.target_amount_today,
+          required_sip: g.required_sip,
+          funded: g.funded,
+        }))
+    : data.goals ?? [];
+  const totalInflated = rows.reduce((s, g) => s + (g.inflated_target ?? 0), 0);
+  const totalSip = rows.reduce(
+    (s, g) => s + (g.funded ? g.required_sip ?? 0 : 0),
+    0,
+  );
+  const latestYear = rows.reduce((y, g) => Math.max(y, g.target_year), 0);
+
+  return (
+    <section className="goals-recap">
+      <div className="artifact-card-eyebrow">Goals in flight</div>
+      <h2 className="artifact-card-title xl">
+        Where we're<br />heading.
+      </h2>
+      <p className="artifact-card-lede">
+        {rows.length} goal{rows.length === 1 ? "" : "s"}, anchored end-to-end.
+        Maya keeps the priorities honest as numbers shift.
+      </p>
+
+      <ul className="recap-rows">
+        {rows.map((g) => (
+          <li key={`${g.priority}-${g.name}`}>
+            <span className="recap-priority">{g.priority}</span>
+            <div className="recap-meta">
+              <div className="recap-name">{g.name}</div>
+              <div className="recap-horizon">
+                {g.horizon_years} yr · {g.target_year}
+                {g.required_sip ? ` · ${inr(g.required_sip)}/mo` : ""}
+                {!g.funded && rows.length > 1 ? " · parked" : ""}
+              </div>
+            </div>
+            <b className="recap-target">{inr(g.inflated_target)}</b>
+          </li>
+        ))}
+      </ul>
+
+      <div className="recap-total">
+        <div>
+          <span>Total target {latestYear ? `by ${latestYear}` : ""}</span>
+          <b>{inr(totalInflated)}</b>
+        </div>
+        {totalSip > 0 && (
+          <div>
+            <span>Combined monthly SIP</span>
+            <b className="recap-sip">{inr(totalSip)}</b>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .goals-recap .artifact-card-title.xl { font-size: 36px; line-height: 1.04; max-width: none; }
+        .recap-rows {
+          margin: 22px 0 0;
+          padding: 0;
+          list-style: none;
+        }
+        .recap-rows li {
+          display: grid;
+          grid-template-columns: 28px 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 14px 0;
+          border-bottom: 1px solid var(--cream-deep);
+        }
+        .recap-rows li:last-child { border-bottom: none; }
+        .recap-priority {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: var(--ink);
+          color: var(--cream);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font-display);
+          font-size: 13px;
+        }
+        .recap-meta { min-width: 0; }
+        .recap-name {
+          font-family: var(--font-display);
+          font-size: 16px;
+          color: var(--ink);
+        }
+        .recap-horizon {
+          margin-top: 2px;
+          color: var(--ink-soft);
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .recap-target {
+          font-family: var(--font-display);
+          font-weight: 400;
+          font-size: 18px;
+          color: var(--ink);
+          white-space: nowrap;
+        }
+        .recap-total {
+          margin-top: 6px;
+          padding-top: 18px;
+          border-top: 2px solid var(--ink);
+          display: grid;
+          gap: 14px;
+        }
+        .recap-total > div {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 14px;
+        }
+        .recap-total span {
+          color: var(--ink);
+          font-size: 13px;
+          font-weight: 500;
+        }
+        .recap-total b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-weight: 400;
+          font-size: 28px;
+          letter-spacing: -0.01em;
+        }
+        .recap-total b.recap-sip { color: var(--champagne); }
+      `}</style>
+    </section>
+  );
+}
+
 export function InflationCurveCard({ data }: { data: InflationData }) {
   const snapshot = useStateSnapshot();
   // Prefer live snapshot values for the named goal so updates from

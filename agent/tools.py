@@ -21,6 +21,22 @@ from core.run_transcript import record_tool_call, record_tool_result
 from core.session import STATE, Goal, get_goal, missing, snapshot, tool_response
 
 
+GOAL_TYPES = [
+    {"key": "emergency", "label": "Emergency fund", "section": "Safety net",
+     "blurb": "Six months of outflow — your runway if life slips."},
+    {"key": "retirement", "label": "Retirement", "section": "Long-term independence",
+     "blurb": "Anchor a corpus to age 60 so work stays a choice."},
+    {"key": "home", "label": "Home", "section": "Aspirations",
+     "blurb": "Down payment in today's rupees, then we inflate it forward."},
+    {"key": "education", "label": "Children's education", "section": "Aspirations",
+     "blurb": "Higher-ed cost compounds fastest — usually 18 − age years out."},
+    {"key": "car", "label": "Car or vehicle", "section": "Aspirations",
+     "blurb": "Short-horizon goal; usually three to five years."},
+    {"key": "other", "label": "Anything else", "section": "Aspirations",
+     "blurb": "Wedding, sabbatical, travel — speak it and Maya plans it."},
+]
+
+
 def _pct(x: float) -> str:
     return f"{x * 100:.0f} percent"
 
@@ -390,9 +406,16 @@ async def confirm_financial_snapshot(args: dict) -> dict:
                        "Show the AA income and expense methodology with savings rate and EMI-to-income ratio, ask for edits, and get the user's confirmation before goals.")
 
     STATE.financial_snapshot_confirmed = True
+    # Surface the goal-types menu the moment goals are unlocked, so the user
+    # has a visual anchor while Maya frames the goals stage.
+    await ui_bus.emit_artifact("goal_types_picker", {
+        "types": GOAL_TYPES,
+        "recommended": ["emergency", "retirement"],
+    })
     hint = ("Financial snapshot confirmed. The user accepted the investment holdings, "
-            "answered the additional-investments check, and confirmed cash flow. Move "
-            "straight to goals.")
+            "answered the additional-investments check, and confirmed cash flow. The "
+            "goal-types picker is now on screen — frame goals briefly (safety, "
+            "long-term independence, aspirations) and start with the emergency fund.")
     return tool_response({
         "cashflow_confirmed": STATE.cashflow_confirmed,
         "investments_confirmed": STATE.investments_confirmed,
@@ -651,6 +674,57 @@ async def build_goal_portfolio(args: dict) -> dict:
     return tool_response(STATE.proposed_portfolios[goal.name], hint)
 
 
+def _goals_recap_payload() -> dict:
+    """Snapshot of all captured goals for the 'Where we're heading' card."""
+    goals = [
+        {
+            "name": g.name,
+            "priority": g.priority,
+            "horizon_years": g.horizon_years,
+            "target_year": _dt.datetime.now().year + g.horizon_years,
+            "target_amount_today": g.target_amount_today,
+            "inflated_target": g.inflated_target,
+            "required_sip": g.required_sip,
+            "funded": g.funded,
+        }
+        for g in sorted(STATE.goals, key=lambda x: x.priority)
+    ]
+    return {
+        "goals": goals,
+        "total_inflated": sum(g["inflated_target"] or 0 for g in goals),
+        "total_sip": sum(g["required_sip"] or 0 for g in goals if g["funded"]),
+    }
+
+
+async def show_artifact(args: dict) -> dict:
+    """Re-summon a previously shown artifact, or build a goals_recap from STATE.
+
+    The frontend keeps a queue and dismisses cards on tool advance, so the user
+    can ask "show me my investments again" and Maya can bring it back without
+    re-running the original tool. For goals_recap, we always rebuild from STATE
+    so the recap reflects edits or reprioritizations since it was last seen.
+    """
+    kind = (args.get("kind") or "").strip()
+    if not kind:
+        return missing("an artifact kind", "Pass the kind name like income_snapshot or mfc_review.")
+
+    if kind == "goals_recap":
+        if not STATE.goals:
+            return missing("any captured goals",
+                           "There are no goals yet. Walk the user through Stage 5 first.")
+        payload = _goals_recap_payload()
+        await ui_bus.emit_artifact("goals_recap", payload)
+        return tool_response(payload,
+                             "Goals recap is back on screen — narrate the running tally briefly.")
+
+    cached = ui_bus.last_artifact(kind)
+    if cached is None:
+        return missing(f"a previously shown '{kind}' artifact",
+                       "The user has not seen that card yet — walk them through it the normal way.")
+    await ui_bus.emit_artifact(kind, cached)
+    return tool_response({"kind": kind}, f"Re-summoned {kind}. Briefly remind the user what it shows.")
+
+
 async def generate_plan_pdf(args: dict) -> dict:
     if not STATE.goals or not STATE.ratios:
         return missing("a complete plan",
@@ -738,6 +812,9 @@ TOOL_SPECS = [
      ["max_affordable_sip"]),
     (build_goal_portfolio, "Build the phased portfolio for a single goal: horizon decides phase count (short=1, medium=2, long=3) and allocation. Call once per funded goal.",
      {"goal_name": {"type": "string"}}, ["goal_name"]),
+    (show_artifact, "Re-summon a card the user already saw. Call this when the user asks 'show me X again', 'what was that home goal again', 'pull up my plan'. Kinds: risk_reveal, family_recap, mfc_review, income_snapshot, investments_review, goal_types_picker, inflation_curve, sip_split, plan_hero. Special: 'goals_recap' rebuilds a 'Where we're heading' summary from the current goals — call this whenever the user wants to see the full list of goals in flight.",
+     {"kind": {"type": "string", "description": "Artifact kind to re-summon, or 'goals_recap' to build a live goals summary"}},
+     ["kind"]),
     (generate_plan_pdf, "Generate the final financial plan PDF from everything gathered.", {}, []),
 ]
 

@@ -36,6 +36,7 @@ def test_registered_tool_names_match_planning_contract():
         "compute_gap_and_sip",
         "reprioritize",
         "build_goal_portfolio",
+        "show_artifact",
         "generate_plan_pdf",
     ]
 

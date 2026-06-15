@@ -11,6 +11,10 @@ from loguru import logger
 
 _rtvi = None
 
+# Cache of the last payload emitted per artifact kind. Powers the
+# show_artifact tool so Maya can re-summon a card the user already saw.
+LAST_ARTIFACT_BY_KIND: dict[str, dict] = {}
+
 ArtifactKind = Literal[
     "risk_reveal",
     "family_recap",
@@ -19,6 +23,8 @@ ArtifactKind = Literal[
     "aa_consent",
     "income_snapshot",
     "investments_review",
+    "goal_types_picker",
+    "goals_recap",
     "inflation_curve",
     "sip_split",
     "funds_picker",
@@ -47,4 +53,13 @@ async def emit(data: dict) -> None:
 
 
 async def emit_artifact(kind: ArtifactKind, data: dict) -> None:
+    LAST_ARTIFACT_BY_KIND[kind] = data
     await emit({"type": "artifact", "kind": kind, "data": data})
+
+
+def last_artifact(kind: str) -> dict | None:
+    return LAST_ARTIFACT_BY_KIND.get(kind)
+
+
+def reset_artifact_cache() -> None:
+    LAST_ARTIFACT_BY_KIND.clear()
