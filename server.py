@@ -34,6 +34,7 @@ from bot import run_bot
 from core import consent
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+WEB_DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "dist")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 app = FastAPI(title="Wealth Expert")
@@ -95,6 +96,10 @@ async def otp(request: dict):
     """Simple browser-entered OTP bridge for mocked MF Central / Finvu consent."""
     accepted = await consent.submit_otp(str(request.get("request_id", "")), str(request.get("otp", "")))
     return {"accepted": accepted}
+
+
+if os.path.isdir(WEB_DIST_DIR):
+    app.mount("/", StaticFiles(directory=WEB_DIST_DIR, html=True), name="web")
 
 
 if __name__ == "__main__":
