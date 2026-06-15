@@ -281,8 +281,9 @@ async def pull_account_aggregator(args: dict) -> dict:
     # block — "complete one flow before the other."
     await ui_bus.emit_artifact("investments_review", {
         "mf_total": (STATE.portfolio or {}).get("total_value"),
+        "mf_funds_count": len((STATE.portfolio or {}).get("holdings") or []),
         "aa_assets": aa,
-        "manual_count": len(STATE.additional_assets or []),
+        "additional_assets": list(STATE.additional_assets or []),
     })
     # Income snapshot also carries the live ratios so the card can render
     # savings-rate and DTI bars in-place — no separate ratios artifact needed.
@@ -371,6 +372,15 @@ async def add_manual_asset(args: dict) -> dict:
     }
     STATE.additional_assets.append(entry)
     total = sum(a["value"] for a in STATE.additional_assets)
+    # Re-emit investments_review so the on-screen card stays mounted and shows
+    # the new manual asset live. The wrapper's post-tool state event will then
+    # re-anchor the refreshed card instead of advancing to the queued cashflow.
+    await ui_bus.emit_artifact("investments_review", {
+        "mf_total": (STATE.portfolio or {}).get("total_value"),
+        "mf_funds_count": len((STATE.portfolio or {}).get("holdings") or []),
+        "aa_assets": STATE.aa_assets,
+        "additional_assets": list(STATE.additional_assets),
+    })
     hint = (f"Added {entry['name']} worth {entry['value']:.0f} rupees. "
             f"Total manual extras now {total:.0f} rupees across "
             f"{len(STATE.additional_assets)} item(s). Ask if there is anything else.")

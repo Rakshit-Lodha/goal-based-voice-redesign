@@ -4,6 +4,7 @@ import type {
   AaAssets,
   ExpenseBreakdown,
   Family,
+  ManualAsset,
   Phase,
   Portfolio,
   ProposedPortfolio,
@@ -46,8 +47,9 @@ type InflationData = {
 
 type InvestmentsData = {
   mf_total?: number;
+  mf_funds_count?: number;
   aa_assets?: AaAssets;
-  manual_count?: number;
+  additional_assets?: ManualAsset[];
 };
 
 type MfcReviewData = {
@@ -474,9 +476,23 @@ function dtiBadge(band: string): string {
  * stocks edits from "pull_account_aggregator with correction" land here
  * without needing the artifact event to be re-summoned.
  */
-export function InvestmentsCard(_props: { data: InvestmentsData }) {
+export function InvestmentsCard({ data }: { data: InvestmentsData }) {
   const snapshot = useStateSnapshot();
-  if (!snapshot) {
+  // Prefer snapshot when it carries the AA pull (lets live corrections re-render
+  // the card), but fall back to the artifact payload on first mount — the
+  // artifact event reaches the browser before the trailing state event, so
+  // snapshot.aa_assets is still null when the card initially renders.
+  const portfolio: Portfolio | null = snapshot?.portfolio ?? null;
+  const aa: AaAssets | null = snapshot?.aa_assets ?? data?.aa_assets ?? null;
+  // Prefer snapshot's list once it lands (handles live edits); the artifact
+  // payload is the source of truth on first paint after add_manual_asset
+  // because the state event lags behind the artifact event.
+  const snapshotManuals = snapshot?.additional_assets;
+  const manuals: ManualAsset[] = (snapshotManuals && snapshotManuals.length > 0)
+    ? snapshotManuals
+    : (data?.additional_assets ?? snapshotManuals ?? []);
+
+  if (!portfolio && !aa && manuals.length === 0) {
     return (
       <section>
         <div className="artifact-card-eyebrow">Your investments</div>
@@ -486,16 +502,19 @@ export function InvestmentsCard(_props: { data: InvestmentsData }) {
     );
   }
 
-  const portfolio: Portfolio | null = snapshot.portfolio;
-  const aa = snapshot.aa_assets;
-  const manuals = snapshot.additional_assets ?? [];
-
   const rows: Array<{ label: string; value: number; sub?: string }> = [];
   if (portfolio && portfolio.total_value > 0) {
     rows.push({
       label: "Mutual fund portfolio",
       value: portfolio.total_value,
       sub: `${portfolio.holdings.length} fund${portfolio.holdings.length === 1 ? "" : "s"}`,
+    });
+  } else if ((data?.mf_total ?? 0) > 0) {
+    const fundCount = data?.mf_funds_count ?? 0;
+    rows.push({
+      label: "Mutual fund portfolio",
+      value: data.mf_total ?? 0,
+      sub: fundCount > 0 ? `${fundCount} fund${fundCount === 1 ? "" : "s"}` : undefined,
     });
   }
   if (aa) {

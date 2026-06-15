@@ -44,14 +44,14 @@ export function useArtifactQueue() {
   }, []);
 
   const dismiss = useCallback(() => {
-    if (queue.length > 0) {
+    if (queueRef.current.length > 0) {
       showNext();
       return;
     }
     activeRef.current = null;
     activeTickRef.current = null;
     setActive(null);
-  }, [queue.length, showNext]);
+  }, [showNext]);
 
   useRtviEvent("serverMessage", (message) => {
     if (isStateEvent(message)) {
@@ -85,11 +85,14 @@ export function useArtifactQueue() {
       return;
     }
     // Same kind arriving while still active = a live correction (e.g. user
-    // edited income, AA re-pulled). Replace in place so the visible card
-    // updates without sliding off and back on. activeTickRef stays so the
-    // next-tick dismiss is still deterministic.
+    // edited income, AA re-pulled, manual asset added). Replace in place so the
+    // visible card updates without sliding off and back on. Re-null the anchor
+    // so the *next* state event re-anchors instead of dismissing the card we
+    // just refreshed — without this, the trailing wrap-helper state event from
+    // the same tool call would advance the queue out from under the user.
     if (activeRef.current.kind === message.kind) {
       activeRef.current = message;
+      activeTickRef.current = null;
       setActive(message);
       return;
     }
@@ -101,6 +104,7 @@ export function useArtifactQueue() {
     // and surface at the wrong moment. Replace in place.
     if (isConsent(activeRef.current.kind) && !isConsent(message.kind)) {
       activeRef.current = message;
+      activeTickRef.current = null;
       setActive(message);
       return;
     }

@@ -124,3 +124,34 @@ def test_gold_plan_uses_expected_tool_call_sequence(monkeypatch):
         "build_goal_portfolio",
         "generate_plan_pdf",
     ]
+
+
+def test_add_manual_asset_refreshes_investments_without_pre_state(monkeypatch):
+    """Manual additions should update the visible investments card before any state tick can advance it."""
+    emitted = []
+
+    async def capture_emit(message):
+        emitted.append(message)
+
+    monkeypatch.setattr(tools.ui_bus, "emit", capture_emit)
+    tools.STATE.portfolio = {
+        "holdings": [{"fund": "Alpha Fund"}],
+        "total_value": 1_000_000,
+    }
+    tools.STATE.aa_assets = {"epf": 100_000, "nps": 50_000, "stocks": 75_000}
+
+    _run(tools.add_manual_asset({
+        "name": "Family gold",
+        "asset_type": "gold",
+        "value": 500_000,
+    }))
+
+    assert [message["type"] for message in emitted] == ["artifact"]
+    artifact = emitted[0]
+    assert artifact["kind"] == "investments_review"
+    assert artifact["data"]["mf_total"] == 1_000_000
+    assert artifact["data"]["mf_funds_count"] == 1
+    assert artifact["data"]["aa_assets"] == {"epf": 100_000, "nps": 50_000, "stocks": 75_000}
+    assert artifact["data"]["additional_assets"] == [
+        {"name": "Family gold", "asset_type": "gold", "value": 500_000},
+    ]
