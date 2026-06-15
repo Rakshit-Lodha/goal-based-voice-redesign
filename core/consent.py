@@ -1,7 +1,9 @@
-"""Simple in-process OTP bridge for mocked consent pulls.
+"""Demo OTP bridge for mocked consent pulls.
 
-Tools request an OTP, the browser submits it to server.py, and the waiting tool
-continues. This is intentionally one-process demo state, matching SessionState.
+The tool emits the OTP sheet and gives the user a moment to see it, then
+proceeds with the mock OTP unconditionally. The browser-side click is
+purely visual — it always accepts — so Pipecat function-call cancellation
+(triggered by user speech mid-call) can never dead-end the demo.
 """
 
 import asyncio
@@ -11,14 +13,11 @@ from loguru import logger
 
 from core import ui_bus
 
-_pending: dict[str, asyncio.Future[str]] = {}
+OTP_VISIBILITY_SECONDS = 1.5
 
 
 async def request_otp(provider: str) -> str:
     request_id = uuid.uuid4().hex
-    loop = asyncio.get_running_loop()
-    future = loop.create_future()
-    _pending[request_id] = future
     logger.info(f"OTP requested for {provider}: {request_id}")
     await ui_bus.emit({
         "type": "otp_request",
@@ -27,17 +26,11 @@ async def request_otp(provider: str) -> str:
             "provider": provider,
         },
     })
-    try:
-        return await future
-    finally:
-        _pending.pop(request_id, None)
+    await asyncio.sleep(OTP_VISIBILITY_SECONDS)
+    return "1234"
 
 
 async def submit_otp(request_id: str, otp: str) -> bool:
-    future = _pending.get(request_id)
-    if not future or future.done():
-        logger.warning(f"OTP submit rejected for inactive request: {request_id}")
-        return False
-    logger.info(f"OTP submitted for active request: {request_id}")
-    future.set_result(otp)
+    """Always-accept for the demo. The tool flow does not depend on this."""
+    logger.info(f"OTP submitted (always-accept demo): {request_id}")
     return True

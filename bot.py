@@ -32,7 +32,10 @@ from pipecat.transports.base_transport import TransportParams
 
 from agent.prompts import GREETING_INSTRUCTION, SYSTEM_PROMPT
 from agent.tools import register_tools
+from core.run_cost import RunCostMeter, RunCostTracker
+from core.run_transcript import RunTranscriptRecorder, RunTranscriptTap
 from core import session, ui_bus
+from core import run_transcript
 
 PDF_PORT = 7861
 
@@ -54,7 +57,7 @@ transport_params = {
 
 def make_stt():
     """Pluggable STT behind STT_PROVIDER: ringg | sarvam | deepgram."""
-    provider = os.getenv("STT_PROVIDER", "ringg").lower()
+    provider = os.getenv("STT_PROVIDER", "sarvam").lower()
 
     if provider == "ringg":
         if os.getenv("RINGG_API_KEY"):
@@ -76,6 +79,13 @@ def make_stt():
     return SarvamSTTService(api_key=os.environ["SARVAM_API_KEY"])
 
 
+def resolved_stt_provider() -> str:
+    provider = os.getenv("STT_PROVIDER", "sarvam").lower()
+    if provider == "ringg" and not os.getenv("RINGG_API_KEY"):
+        return "sarvam"
+    return provider
+
+
 def serve_pdf_dir():
     """Serve ./output at http://localhost:7861 so the plan PDF has a clickable URL."""
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
@@ -91,20 +101,39 @@ def serve_pdf_dir():
 
 async def run_bot(transport):
     session.reset()
+    cost_tracker = RunCostTracker()
+    transcript_recorder = RunTranscriptRecorder()
+    run_transcript.bind(transcript_recorder)
 
+    stt_provider = resolved_stt_provider()
+    llm_model = "gpt-4o"
+    tts_model = os.getenv("SARVAM_TTS_MODEL", "bulbul:v3")
+    tts_voice = os.getenv("SARVAM_VOICE_ID", "anushka")
+    tts_language = "en-IN"
     stt = make_stt()
 
-    llm = OpenAILLMService(api_key=os.environ["OPENAI_API_KEY"], model="gpt-4o")
+    llm = OpenAILLMService(api_key=os.environ["OPENAI_API_KEY"], model=llm_model)
     tools = register_tools(llm)
 
     tts = SarvamTTSService(
         api_key=os.environ["SARVAM_API_KEY"],
         settings=SarvamTTSService.Settings(
-            model=os.getenv("SARVAM_TTS_MODEL", "bulbul:v3"),
-            voice=os.getenv("SARVAM_VOICE_ID", "anushka"),
-            language="en-IN",
+            model=tts_model,
+            voice=tts_voice,
+            language=tts_language,
         ),
     )
+    run_metadata = {
+        "stt_provider": stt_provider,
+        "llm_provider": "openai",
+        "llm_model": llm_model,
+        "tts_provider": "sarvam",
+        "tts_model": tts_model,
+        "tts_voice": tts_voice,
+        "tts_language": tts_language,
+        "audio_in_sample_rate": 16000,
+        "audio_out_sample_rate": 24000,
+    }
 
     # RTVI: pushes live state snapshots to the browser UI over the data channel.
     rtvi = RTVIProcessor(transport=transport)
@@ -122,17 +151,26 @@ async def run_bot(transport):
     pipeline = Pipeline([
         transport.input(),
         rtvi,
+        RunCostMeter(cost_tracker, name="run_cost_audio_meter"),
         stt,
+        RunTranscriptTap(transcript_recorder, name="run_transcript_user_tap"),
         aggregators.user(),
         llm,
+        RunTranscriptTap(transcript_recorder, name="run_transcript_assistant_tap"),
         tts,
+        RunCostMeter(cost_tracker, name="run_cost_usage_meter"),
         transport.output(),
         aggregators.assistant(),
     ])
 
     task = PipelineTask(
         pipeline,
-        params=PipelineParams(audio_in_sample_rate=16000, audio_out_sample_rate=24000),
+        params=PipelineParams(
+            audio_in_sample_rate=16000,
+            audio_out_sample_rate=24000,
+            enable_metrics=True,
+            enable_usage_metrics=True,
+        ),
         observers=[RTVIObserver(rtvi)],
     )
 
@@ -145,11 +183,21 @@ async def run_bot(transport):
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
         logger.info("Client disconnected")
+        cost_tracker.log_summary_once()
+        transcript_path = transcript_recorder.save_once()
+        cost_tracker.save_once(metadata={**run_metadata, "transcript_path": transcript_path})
         ui_bus.unbind()
+        run_transcript.unbind()
         await task.cancel()
 
     runner = PipelineRunner(handle_sigint=False)
-    await runner.run(task)
+    try:
+        await runner.run(task)
+    finally:
+        cost_tracker.log_summary_once()
+        transcript_path = transcript_recorder.save_once()
+        cost_tracker.save_once(metadata={**run_metadata, "transcript_path": transcript_path})
+        run_transcript.unbind()
 
 
 async def bot(runner_args: RunnerArguments):

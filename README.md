@@ -23,11 +23,18 @@ cp .env.example .env   # fill in your keys
 | Var | What |
 |---|---|
 | `OPENAI_API_KEY` | GPT-4o (conversation + function calling) |
-| `SARVAM_API_KEY` | Sarvam TTS (and fallback STT) |
+| `SARVAM_API_KEY` | Sarvam TTS and default STT |
 | `SARVAM_VOICE_ID` | TTS voice, default `anushka` |
-| `STT_PROVIDER` | `ringg` (default) \| `sarvam` \| `deepgram` |
+| `STT_PROVIDER` | `sarvam` (default) \| `ringg` \| `deepgram` |
 | `RINGG_API_KEY` | Required for `STT_PROVIDER=ringg`; warns + falls back to Sarvam if missing |
 | `DEEPGRAM_API_KEY` | Only for `STT_PROVIDER=deepgram` |
+| `COST_LLM_INPUT_PER_1M_TOKENS` | Optional run-cost estimate: LLM input price per 1M tokens |
+| `COST_LLM_OUTPUT_PER_1M_TOKENS` | Optional run-cost estimate: LLM output price per 1M tokens |
+| `COST_LLM_CACHED_INPUT_PER_1M_TOKENS` | Optional run-cost estimate: cached LLM input price per 1M tokens |
+| `COST_LLM_CACHE_CREATION_INPUT_PER_1M_TOKENS` | Optional run-cost estimate: cache-write input price per 1M tokens; defaults to input price |
+| `COST_TTS_PER_1M_CHARS` | Optional run-cost estimate: TTS price per 1M characters |
+| `COST_STT_PER_AUDIO_MINUTE` | Optional run-cost estimate: streaming STT price per audio minute |
+| `COST_CURRENCY` | Optional label for cost logs, default `USD` |
 
 ## Run
 
@@ -140,6 +147,41 @@ name or age.
 - The dashboard receives live state snapshots over RTVI server messages and
   shows risk, family, MF Central, Finvu AA, goals, SIP gap, current-phase
   portfolio, and the plan PDF link.
+
+## Run metrics logging
+
+Each call logs a `Run cost summary` when the client disconnects. LLM tokens and
+TTS characters come from Pipecat usage metrics; STT is estimated from inbound
+audio seconds because streaming STT providers usually bill by audio duration.
+All rates default to zero, so set the `COST_*` env vars above to match the
+current vendor prices you want to track.
+
+The same data is saved to `output/metrics/run_metrics_<timestamp>.json` with
+provider/model metadata, raw LLM usage events, raw TTS usage events, audio
+duration, configured rates, subtotals, and total cost. Use the newest metrics
+file after a run to calculate or audit the full cost.
+
+The same run also logs a `Run latency summary` using Pipecat service metrics
+when processors emit them. Latencies are grouped by metric, processor, and model,
+with count, average, p95, and max values in milliseconds.
+
+Each call also saves a JSON transcript to `output/transcripts/`. It contains
+final user transcripts, Maya's assistant responses, and every tool call/result
+payload in order.
+
+## Live-run binary eval
+
+After a conversation, run deterministic PASS/FAIL checks against the saved
+transcript:
+
+```bash
+python scripts/evaluate_run.py --transcript output/transcripts/<run>.json
+```
+
+The script exits `0` only when all checks pass. It verifies tool-call/result
+pairing, allowed tool order, consent arguments for data pulls, financial snapshot
+confirmation before goals, PDF generation, and that Maya did not expose internal
+tool JSON in spoken responses. Add `--json` for machine-readable output.
 
 ## Project structure
 

@@ -13,6 +13,7 @@ import OtpSheet, { type OtpRequest } from "./components/OtpSheet";
 import LedgerPanel from "./components/LedgerPanel";
 import CascadeToast, { type CascadeDiff } from "./components/CascadeToast";
 import PlanHero from "./screens/PlanHero";
+import EntryScreen from "./screens/EntryScreen";
 import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
 import { usePause } from "./state/usePause";
@@ -23,13 +24,14 @@ import type { CascadeDiffEvent, OtpRequestEvent, ServerMessage } from "./types";
 
 export default function App() {
   const client = useMemo(() => createClient(), []);
+  const [entered, setEntered] = useState(false);
 
   return (
     // client-react's bundled .d.ts declares its own PipecatClient class, nominally
     // distinct from the one we construct though identical at runtime — cast here.
     <PipecatClientProvider client={client as never}>
       <PhoneFrame>
-        <Conversation />
+        {entered ? <Conversation /> : <EntryScreen onStart={() => setEntered(true)} />}
       </PhoneFrame>
       {/* Plays Maya's TTS audio coming back from the bot. */}
       <PipecatClientAudio />

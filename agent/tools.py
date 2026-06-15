@@ -145,9 +145,9 @@ async def pull_mf_central(args: dict) -> dict:
     )
     under = p["underperformers"]
 
-    # MFC diagnosis insights — three toned bullets surface in the card.
-    # Good: pick the best-rated suitable fund. Warn: surface a duplicate
-    # category (likely overlap). Bad: name the first underperformer.
+    # MFC diagnosis insights — toned bullets surface in the card. Good: pick
+    # the best-rated suitable fund. Bad: one bullet per underperformer with
+    # explicit "Unsuitable category" / "Weak ranking" tags + LTCG-aware action.
     insights: list[dict] = []
     good_reviews = [r for r in reviews if r["status"] == "good"]
     if good_reviews:
@@ -155,33 +155,27 @@ async def pull_mf_central(args: dict) -> dict:
         insights.append({"tone": "good",
                          "text": f"Keep {top_good['fund']} — {top_good['category']} fits a "
                                  f"{STATE.risk_profile or 'balanced'} profile."})
-    categories = [r["category"] for r in reviews]
-    duplicate = next((c for c in dict.fromkeys(categories) if categories.count(c) > 1), None)
-    if duplicate:
-        dup_funds = [r["fund"] for r in reviews if r["category"] == duplicate]
-        insights.append({"tone": "warn",
-                         "text": f"{len(dup_funds)} funds in {duplicate} — likely overlap; "
-                                 f"one can be consolidated."})
-    # Underperformers with a running SIP get the LTCG-aware action: stop the
-    # fresh inflow now, exit progressively as old units cross 1-year LTCG.
     bad_with_sip = [
         h for h in p["holdings"]
         if h["fund"] in under and (h.get("monthly_sip") or 0) > 0
     ]
-    if under:
-        first_bad = next(r for r in reviews if r["status"] != "good")
-        first_bad_holding = next(h for h in p["holdings"] if h["fund"] == first_bad["fund"])
-        if (first_bad_holding.get("monthly_sip") or 0) > 0:
-            insights.append({
-                "tone": "bad",
-                "text": (f"Stop the ₹{int(first_bad_holding['monthly_sip']):,}/mo SIP into "
-                         f"{first_bad['fund']} and exit gradually as units cross 1-year LTCG."),
-            })
+    for review in (r for r in reviews if r["status"] != "good"):
+        holding = next(h for h in p["holdings"] if h["fund"] == review["fund"])
+        tags = []
+        if not review["category_suitable"]:
+            tags.append("Unsuitable category")
+        if not review["score_good"]:
+            tags.append("Weak ranking")
+        tag_text = " · ".join(tags) or "Needs review"
+        sip = int(holding.get("monthly_sip") or 0)
+        if sip > 0:
+            action = f"Stop the ₹{sip:,}/mo SIP and exit gradually as units cross 1-year LTCG."
         else:
-            insights.append({
-                "tone": "bad",
-                "text": f"{first_bad['fund']} — weak score; consider exiting as units cross 1-year LTCG.",
-            })
+            action = "Exit gradually as units cross 1-year LTCG."
+        insights.append({
+            "tone": "bad",
+            "text": f"{review['fund']} — {tag_text}. {action}",
+        })
 
     await ui_bus.emit_artifact("mfc_review", {
         "total_funds": len(p["holdings"]),
