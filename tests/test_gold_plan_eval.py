@@ -41,7 +41,7 @@ def test_gold_manual_asset_end_to_end_plan_eval(monkeypatch):
         "consent_context": "User agreed after Maya explained MF Central and its portfolio-only use.",
     }))
     assert mf["total_value"] == 1_800_000
-    assert mf["underperformers"] == ["Midcap Momentum Fund", "Thematic Infra Fund"]
+    assert mf["underperformers"] == ["Quant Mid Cap Fund", "ICICI Prudential Infrastructure Fund"]
 
     aa = _run(tools.pull_account_aggregator({
         "user_confirmed_consent": True,
@@ -96,7 +96,7 @@ def test_gold_manual_asset_end_to_end_plan_eval(monkeypatch):
     assert len(portfolio["phases"]) == 3
     assert portfolio["current_phase"]["allocation"]["gold"] == 0.05
     assert any(f["bucket"] == "gold" for f in portfolio["current_phase"]["funds"])
-    assert any(f["fund"] == "Gold ETF Fund of Fund" for f in portfolio["current_phase"]["funds"])
+    assert any(f["fund"] == "Nippon India Gold Savings Fund" for f in portfolio["current_phase"]["funds"])
 
     pdf = _run(tools.generate_plan_pdf({}))
     assert pdf["url"].startswith("/output/plan_rakshit_")

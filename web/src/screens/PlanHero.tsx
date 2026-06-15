@@ -8,6 +8,7 @@
  * shows through — matches the rest of the conversation surface.
  */
 import { API_BASE } from "../pcClient";
+import { inr } from "../format";
 
 export default function PlanHero({
   data,
@@ -24,9 +25,10 @@ export default function PlanHero({
   const pdfHref = data.url ? `${API_BASE}${data.url}` : undefined;
   const filename = data.pdf_file ?? "plan.pdf";
   const goals = data.goals_count ?? 0;
-  const subtitle = goals > 0
-    ? `${goals} goal${goals === 1 ? "" : "s"} · gap analysis · 4-fund SIP basket.`
-    : "Your goals, gap analysis, and 4-fund SIP basket.";
+  const sip = data.total_monthly_sip ?? 0;
+  const subtitle = goals > 0 && sip > 0
+    ? `${goals} goal${goals === 1 ? "" : "s"} · gap analysis · ${inr(sip)} a month.`
+    : "Your goals, gap analysis, and a personalised SIP basket.";
 
   return (
     <section className="plan-hero" aria-live="polite">

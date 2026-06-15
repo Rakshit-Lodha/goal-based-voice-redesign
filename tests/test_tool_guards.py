@@ -89,7 +89,7 @@ def test_cashflow_confirmation_is_separate_from_investment_confirmation():
     assert STATE.investments_confirmed is False
     assert STATE.financial_snapshot_confirmed is False
     assert result["error"] == "missing: explicit confirmation of investments"
-    assert "savings rate" in result["instruction"]
+    assert "MF Central holdings" in result["instruction"]
 
 
 def test_account_aggregator_correction_invalidates_stale_goal_plan(monkeypatch):

@@ -41,15 +41,15 @@ PHASE_PLAN = {
 # weights and a one-line rationale for narration.
 FUND_PALETTE = {
     "equity": [
-        ("Nifty 50 Index Fund", 0.60, "Low-cost core owning India's 50 biggest companies."),
-        ("Flexi Cap Fund",      0.40, "Manager moves across caps for extra growth."),
+        ("UTI Nifty 50 Index Fund",     0.60, "Low-cost core owning India's 50 biggest companies."),
+        ("Parag Parikh Flexi Cap Fund", 0.40, "Manager moves across caps for extra growth."),
     ],
     "debt": [
-        ("Short Duration Debt Fund", 0.70, "Steady low-volatility cushion."),
-        ("Liquid Fund",              0.30, "Cash-like, near-zero risk."),
+        ("HDFC Short Term Debt Fund", 0.70, "Steady low-volatility cushion."),
+        ("HDFC Liquid Fund",          0.30, "Cash-like, near-zero risk."),
     ],
     "gold": [
-        ("Gold ETF Fund of Fund", 1.00, "Hedge that holds up when equity wobbles."),
+        ("Nippon India Gold Savings Fund", 1.00, "Hedge that holds up when equity wobbles."),
     ],
 }
 

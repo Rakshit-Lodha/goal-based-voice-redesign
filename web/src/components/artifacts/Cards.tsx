@@ -110,7 +110,7 @@ export function MfcReviewCard({ data }: { data: MfcReviewData }) {
     ? "Your portfolio is invested, but not yet intentional."
     : "A clean portfolio.";
   const lede = underperformers > 0
-    ? `Maya found good exposure, but also ${underperformers} laggard${underperformers === 1 ? "" : "s"} and SIPs that do not yet map to your goals.`
+    ? `Maya found good exposure, but ${underperformers} fund${underperformers === 1 ? "" : "s"} ${underperformers === 1 ? "is" : "are"} dragging the portfolio. Time to clean up.`
     : "No red flags. Maya will reuse what fits and route the rest to your goals.";
 
   return (
@@ -642,9 +642,7 @@ export function InflationCurveCard({ data }: { data: InflationData }) {
         <p className="curve-foot">
           Monthly SIP for this goal · <b>{inr(sip)}</b>
         </p>
-      ) : (
-        <p className="curve-foot muted">Maya will attach an investment plan next.</p>
-      )}
+      ) : null}
 
       <style>{`
         .inflation-curve .artifact-card-title.xl {

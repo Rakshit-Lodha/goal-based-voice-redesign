@@ -146,10 +146,26 @@ async def pull_mf_central(args: dict) -> dict:
         insights.append({"tone": "warn",
                          "text": f"{len(dup_funds)} funds in {duplicate} — likely overlap; "
                                  f"one can be consolidated."})
+    # Underperformers with a running SIP get the LTCG-aware action: stop the
+    # fresh inflow now, exit progressively as old units cross 1-year LTCG.
+    bad_with_sip = [
+        h for h in p["holdings"]
+        if h["fund"] in under and (h.get("monthly_sip") or 0) > 0
+    ]
     if under:
         first_bad = next(r for r in reviews if r["status"] != "good")
-        insights.append({"tone": "bad",
-                         "text": f"{first_bad['fund']} — weak score on consistency versus category."})
+        first_bad_holding = next(h for h in p["holdings"] if h["fund"] == first_bad["fund"])
+        if (first_bad_holding.get("monthly_sip") or 0) > 0:
+            insights.append({
+                "tone": "bad",
+                "text": (f"Stop the ₹{int(first_bad_holding['monthly_sip']):,}/mo SIP into "
+                         f"{first_bad['fund']} and exit gradually as units cross 1-year LTCG."),
+            })
+        else:
+            insights.append({
+                "tone": "bad",
+                "text": f"{first_bad['fund']} — weak score; consider exiting as units cross 1-year LTCG.",
+            })
 
     await ui_bus.emit_artifact("mfc_review", {
         "total_funds": len(p["holdings"]),
@@ -167,7 +183,15 @@ async def pull_mf_central(args: dict) -> dict:
     if under:
         reasons = "; ".join(f"{r['fund']}: {r['reason']}" for r in reviews if r["status"] != "good")
         hint += (f"{len(under)} of {len(p['holdings'])} funds need review: "
-                 f"{', '.join(under)}. Use these reasons briefly: {reasons}.")
+                 f"{', '.join(under)}. Use these reasons briefly: {reasons}. ")
+        if bad_with_sip:
+            sip_actions = "; ".join(
+                f"stop the {int(h['monthly_sip'])} rupee SIP into {h['fund']}"
+                for h in bad_with_sip
+            )
+            hint += (f"For underperformers with a live SIP: {sip_actions}. Then tell the user "
+                     f"to exit the existing units gradually as they cross one-year long-term "
+                     f"capital gains, to avoid the short-term tax hit. ")
     else:
         hint += "No red flags — a clean portfolio."
     return tool_response(p, hint)
@@ -242,6 +266,14 @@ async def pull_account_aggregator(args: dict) -> dict:
     r = STATE.ratios
     aa = STATE.aa_assets
     total_outflow = STATE.monthly_expenses + STATE.monthly_emi
+    # Investments first: extend the existing-portfolio story with EPF, NPS,
+    # stocks (+ any manual extras). Cashflow comes after, as a clean second
+    # block — "complete one flow before the other."
+    await ui_bus.emit_artifact("investments_review", {
+        "mf_total": (STATE.portfolio or {}).get("total_value"),
+        "aa_assets": aa,
+        "manual_count": len(STATE.additional_assets or []),
+    })
     # Income snapshot also carries the live ratios so the card can render
     # savings-rate and DTI bars in-place — no separate ratios artifact needed.
     await ui_bus.emit_artifact("income_snapshot", {
@@ -253,34 +285,30 @@ async def pull_account_aggregator(args: dict) -> dict:
         "aa_assets": aa,
         "ratios": r,
     })
-    # Investments review: a summary trigger; the card binds to the live
-    # snapshot for breakup + total, so this payload stays light.
-    await ui_bus.emit_artifact("investments_review", {
-        "mf_total": (STATE.portfolio or {}).get("total_value"),
-        "aa_assets": aa,
-        "manual_count": len(STATE.additional_assets or []),
-    })
     if is_correction:
         changed = []
-        if cashflow_changed:
-            changed.append("income and expenses")
         if investments_changed:
             changed.append("investments")
+        if cashflow_changed:
+            changed.append("income and expenses")
         changed_text = " and ".join(changed) or "the snapshot"
         prefix = f"Updated {changed_text}. "
     else:
         prefix = "Finvu is back. "
     hint = (f"{prefix}Say you looked at the last three months of bank data. "
-            f"Average monthly income is {STATE.monthly_income} rupees. Average monthly outflow "
-            f"is {total_outflow} rupees: investments {breakdown['investments']}, EMIs "
-            f"{STATE.monthly_emi}, household {breakdown['household_expenses']}, utilities "
-            f"{breakdown['utilities']}, entertainment {breakdown['entertainment']}. "
-            f"Also say the savings rate is {_pct(r['savings_rate'])}, which is {r['savings_band']}; "
-            f"the EMI-to-income ratio is {_pct(r['debt_to_income'])}, which is {r['dti_band']}. "
-            f"Ask the user to confirm income and expenses before moving to investments. If not, "
-            f"ask for the corrected value and call pull_account_aggregator again with that "
-            f"correction; do not ask for OTP again. Do not discuss EPF, NPS and stocks until "
-            f"the cash-flow snapshot is confirmed.")
+            f"Start with investments: alongside the MF Central portfolio, AA pulled "
+            f"EPF {aa['epf']}, NPS {aa['nps']}, and stocks {aa['stocks']} rupees. "
+            f"Ask the user to confirm these investments and whether to add anything else "
+            f"like PPF, FDs, gold, real estate or US/international stocks. If they correct "
+            f"EPF, NPS or stocks, call pull_account_aggregator again with that correction; "
+            f"do not ask for OTP again. Only after investments are confirmed, move to "
+            f"income and expenses: average monthly income {STATE.monthly_income} rupees, "
+            f"total outflow {total_outflow} rupees broken into investments "
+            f"{breakdown['investments']}, EMIs {STATE.monthly_emi}, household "
+            f"{breakdown['household_expenses']}, utilities {breakdown['utilities']}, "
+            f"entertainment {breakdown['entertainment']}. Mention savings rate "
+            f"{_pct(r['savings_rate'])} ({r['savings_band']}) and EMI-to-income "
+            f"{_pct(r['debt_to_income'])} ({r['dti_band']}). Ask to confirm cash flow.")
     return tool_response({"ratios": r, "aa_assets": aa,
                           "monthly_income": STATE.monthly_income,
                           "monthly_expenses": STATE.monthly_expenses,
@@ -350,22 +378,21 @@ async def confirm_financial_snapshot(args: dict) -> dict:
         STATE.cashflow_confirmed = True
     if investments_ok and args.get("user_answered_additional_assets"):
         STATE.investments_confirmed = True
-    if not STATE.cashflow_confirmed:
-        return missing("explicit confirmation of income and expenses",
-                       "Show the AA income and expense methodology, ask for edits, and get the user's confirmation before moving to investments.")
+    # Investments first — one full flow before the cashflow flow begins.
     if not args.get("user_answered_additional_assets") and investments_ok:
         return missing("the additional-investments answer",
-                       "Ask whether they want to add PPF, FDs, gold, real estate, US stocks or international stocks before goals.")
+                       "Ask whether they want to add PPF, FDs, gold, real estate, US stocks or international stocks before cashflow.")
     if not STATE.investments_confirmed:
         return missing("explicit confirmation of investments",
-                       "First recap the savings rate and EMI-to-income ratio with their labels, then show MF Central holdings plus Finvu EPF, NPS and stocks as a list. Ask for edits or additions, then confirm investments before goals.")
+                       "Show MF Central holdings plus Finvu EPF, NPS and stocks as a list. Ask for edits or additions, then confirm investments before moving to income and expenses.")
+    if not STATE.cashflow_confirmed:
+        return missing("explicit confirmation of income and expenses",
+                       "Show the AA income and expense methodology with savings rate and EMI-to-income ratio, ask for edits, and get the user's confirmation before goals.")
 
     STATE.financial_snapshot_confirmed = True
-    hint = ("Financial snapshot confirmed. The user accepted the AA-derived cash flow, "
-            "the investment holdings, and has answered the additional-investments check. Before goals, "
-            "review the MF Central portfolio: explain category suitability for the user's "
-            "risk profile and fund score based on consistency versus category average plus "
-            "downside protection, then mention the good funds and underperformers briefly.")
+    hint = ("Financial snapshot confirmed. The user accepted the investment holdings, "
+            "answered the additional-investments check, and confirmed cash flow. Move "
+            "straight to goals.")
     return tool_response({
         "cashflow_confirmed": STATE.cashflow_confirmed,
         "investments_confirmed": STATE.investments_confirmed,

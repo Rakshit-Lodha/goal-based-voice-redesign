@@ -3,11 +3,9 @@ import { renderArtifact } from "../state/artifactRegistry";
 
 export default function Artifact({
   artifact,
-  queuedCount,
   onDismiss,
 }: {
   artifact: ArtifactEvent | null;
-  queuedCount: number;
   onDismiss: () => void;
 }) {
   if (!artifact) return null;
@@ -18,10 +16,6 @@ export default function Artifact({
         ×
       </button>
       {renderArtifact(artifact)}
-      <div className="artifact-foot">
-        <span>{queuedCount > 0 ? `${queuedCount} waiting` : "Maya summoned this"}</span>
-        <button type="button" onClick={onDismiss}>Dismiss</button>
-      </div>
 
       <style>{`
         .artifact-sheet {
@@ -51,24 +45,6 @@ export default function Artifact({
           color: var(--ink-soft);
           font-size: 22px;
           line-height: 1;
-        }
-        .artifact-foot {
-          margin-top: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          color: var(--ink-soft);
-          font-size: 11px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-        }
-        .artifact-foot button {
-          color: var(--ink-soft);
-          font-size: 11px;
-          letter-spacing: 0.08em;
-          text-decoration: underline;
-          text-transform: uppercase;
         }
         .artifact-card-eyebrow {
           margin-bottom: 10px;

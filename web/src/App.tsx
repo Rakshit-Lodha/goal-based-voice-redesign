@@ -48,7 +48,7 @@ function Conversation() {
   const client = usePipecatClient();
   const baseMood = useMood();
   const { isPaused, togglePause } = usePause();
-  const { active, queuedCount, dismiss } = useArtifactQueue();
+  const { active, dismiss } = useArtifactQueue();
   const snapshot = useStateSnapshot();
   const ledgerRows = useMemo(() => toLedgerRows(snapshot), [snapshot]);
   const [ledgerOpen, setLedgerOpen] = useState(false);
@@ -172,7 +172,7 @@ function Conversation() {
       {isHero ? (
         <PlanHero data={active.data as never} onDismiss={dismiss} />
       ) : (
-        <Artifact artifact={active} queuedCount={queuedCount} onDismiss={dismiss} />
+        <Artifact artifact={active} onDismiss={dismiss} />
       )}
       <OtpSheet
         otp={otp}

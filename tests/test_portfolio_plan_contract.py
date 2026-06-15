@@ -9,7 +9,7 @@ def test_short_term_portfolio_has_debt_heavy_gold_hedge():
 
     assert len(phases) == 1
     assert phases[0]["allocation"] == {"equity": 0.0, "debt": 0.95, "gold": 0.05}
-    assert any(f["fund"] == "Gold ETF Fund of Fund" for f in phases[0]["funds"])
+    assert any(f["fund"] == "Nippon India Gold Savings Fund" for f in phases[0]["funds"])
 
 
 def test_medium_term_portfolio_glides_to_more_debt_and_keeps_gold():
@@ -30,7 +30,7 @@ def test_long_term_portfolio_has_three_phase_equity_glide_down_with_gold():
     assert sum(p["duration_years"] for p in phases) == 25
     assert [p["allocation"]["equity"] for p in phases] == [0.80, 0.50, 0.20]
     assert [p["allocation"]["gold"] for p in phases] == [0.05, 0.10, 0.10]
-    assert all(any(f["fund"] == "Gold ETF Fund of Fund" for f in p["funds"]) for p in phases)
+    assert all(any(f["fund"] == "Nippon India Gold Savings Fund" for f in p["funds"]) for p in phases)
 
 
 def test_every_phase_allocation_sums_to_one():
