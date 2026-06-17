@@ -95,7 +95,7 @@ export default function Orb({
             radial-gradient(circle at 38% 32%,
               rgba(255, 255, 255, 0.85) 0%,
               var(--orb-tint, var(--orb-idle)) 38%,
-              rgba(10, 22, 40, 0.0) 78%);
+              rgba(255, 199, 44, 0.0) 78%);
           filter: blur(0.2px);
         }
 

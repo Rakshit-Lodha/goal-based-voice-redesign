@@ -3,7 +3,7 @@ import LedgerChip from "./LedgerChip";
 /**
  * Top bar inside the phone frame.
  *
- * Left: "Paytm Money" wordmark in Fraunces.
+ * Left: "ABCD" wordmark in Fraunces gold.
  * Right: live LedgerChip — count of facts Maya has confirmed.
  *        Pre-conversation (count 0) it renders the dim placeholder;
  *        once anything is confirmed it activates and opens the panel.
@@ -17,7 +17,7 @@ export default function BrandBar({
 }) {
   return (
     <header className="brand-bar">
-      <div className="wordmark serif">Paytm Money</div>
+      <div className="wordmark serif">ABCD</div>
       <LedgerChip count={ledgerCount} onClick={onLedgerOpen} />
 
       <style>{`
@@ -37,9 +37,9 @@ export default function BrandBar({
         .wordmark {
           font-size: 17px;
           line-height: 1;
-          color: var(--ivory);
-          letter-spacing: 0.005em;
-          font-variation-settings: "opsz" 18, "wght" 400;
+          color: var(--champagne);
+          letter-spacing: 0.02em;
+          font-variation-settings: "opsz" 18, "wght" 500;
         }
       `}</style>
     </header>

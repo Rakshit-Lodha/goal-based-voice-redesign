@@ -28,19 +28,19 @@ def test_financial_ratios():
     r = fm.financial_ratios(100_000, 60_000, 10_000, existing_monthly_sip=12_000)
     assert r["surplus"] == 30_000
     assert r["savings_rate"] == pytest.approx(0.30)
-    assert r["savings_band"] == "bad"
+    assert r["savings_band"] == "good"
     assert r["debt_to_income"] == pytest.approx(0.10)
     assert r["dti_band"] == "average"
     assert r["idle_surplus"] == 18_000
 
 
 def test_financial_ratios_bands():
-    assert fm.financial_ratios(100_000, 65_000)["savings_band"] == "bad"
-    assert fm.financial_ratios(100_000, 50_000)["savings_band"] == "average"
-    assert fm.financial_ratios(100_000, 30_000)["savings_band"] == "good"
-    assert fm.financial_ratios(100_000, 30_000, 25_000)["dti_band"] == "bad"
-    assert fm.financial_ratios(100_000, 30_000, 10_000)["dti_band"] == "average"
-    assert fm.financial_ratios(100_000, 30_000, 9_000)["dti_band"] == "good"
+    assert fm.financial_ratios(100_000, 98_000)["savings_band"] == "bad"
+    assert fm.financial_ratios(100_000, 90_000)["savings_band"] == "average"
+    assert fm.financial_ratios(100_000, 80_000)["savings_band"] == "good"
+    assert fm.financial_ratios(100_000, 50_000, 30_000)["dti_band"] == "bad"
+    assert fm.financial_ratios(100_000, 50_000, 10_000)["dti_band"] == "average"
+    assert fm.financial_ratios(100_000, 50_000, 3_000)["dti_band"] == "good"
 
 
 def test_lumpsum_fv():

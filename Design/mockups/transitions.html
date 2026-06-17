@@ -8,27 +8,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --navy:        #0A1628;
-  --navy-2:      #142239;
+  --navy:        #B8181F;
+  --navy-2:      #9E0E15;
   --cream:       #F7F2EA;
   --cream-2:     #EFE7D6;
   --hairline:    #E6DECF;
   --hairline-2:  #D8CFBC;
-  --champagne:   #C9A961;
-  --champagne-2: #B89548;
+  --champagne:   #FFC72C;
+  --champagne-2: #E8A800;
   --green:       #3D7C57;
   --ink:         #1A1F2E;
   --ink-mute:    #6B6356;
   --ink-soft:    #4A4538;
-  --on-dark:     #F7F2EA;
-  --on-dark-mute:#8C97AB;
+  --on-dark:     #FFF5E6;
+  --on-dark-mute:#F4B9BD;
   --serif: 'Fraunces', Georgia, serif;
   --sans: 'Inter', -apple-system, system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
-  background: #161E2E; color: var(--on-dark);
+  background: #5C0810; color: var(--on-dark);
   font-family: var(--sans); -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   display: flex; flex-direction: column; align-items: center;
@@ -45,7 +45,7 @@ h1 {
   width: 390px; height: 844px;
   border-radius: 44px;
   background: var(--navy);
-  background-image: radial-gradient(circle at 50% -10%, rgba(155,175,220,0.06), transparent 50%);
+  background-image: radial-gradient(circle at 50% -10%, rgba(255,199,44,0.06), transparent 50%);
   box-shadow: 0 50px 100px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
   overflow: hidden;
   position: relative;
@@ -57,7 +57,7 @@ h1 {
   display: flex; align-items: center; justify-content: space-between;
   z-index: 4;
 }
-.brand-mark { font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--cream); font-weight: 500; }
+.brand-mark { font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--champagne); font-weight: 500; }
 .brand-mark em { font-style: italic; color: var(--champagne); }
 .brand-meta { font-size: 11px; color: var(--on-dark-mute); letter-spacing: 0.12em; text-transform: uppercase; }
 
@@ -73,19 +73,19 @@ h1 {
     background 700ms var(--ease),
     box-shadow 700ms var(--ease);
   z-index: 3;
-  background: radial-gradient(circle at 35% 30%, #7889A8 0%, #3A4866 35%, #1B2A45 75%);
+  background: radial-gradient(circle at 35% 30%, #F4B9BD 0%, #C2362E 35%, #7E0A11 75%);
   box-shadow:
-    0 0 calc(60px * var(--orb-glow, 1)) calc(8px * var(--orb-glow, 1)) rgba(155,175,220,0.20),
-    0 0 calc(120px * var(--orb-glow, 1)) calc(20px * var(--orb-glow, 1)) rgba(155,175,220,0.08),
+    0 0 calc(60px * var(--orb-glow, 1)) calc(8px * var(--orb-glow, 1)) rgba(255,199,44,0.20),
+    0 0 calc(120px * var(--orb-glow, 1)) calc(20px * var(--orb-glow, 1)) rgba(255,199,44,0.08),
     inset 0 -10px 24px rgba(0,0,0,0.32),
     inset 0 6px 12px rgba(255,255,255,0.08);
   animation: orb-pulse 3.6s ease-in-out infinite;
 }
 .orb.talking {
-  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  background: radial-gradient(circle at 35% 30%, #FFE9A3 0%, #FFC72C 38%, #A8731A 85%);
   box-shadow:
-    0 0 calc(80px * var(--orb-glow, 1)) calc(10px * var(--orb-glow, 1)) rgba(201,169,97,0.35),
-    0 0 calc(160px * var(--orb-glow, 1)) calc(30px * var(--orb-glow, 1)) rgba(201,169,97,0.15),
+    0 0 calc(80px * var(--orb-glow, 1)) calc(10px * var(--orb-glow, 1)) rgba(255,199,44,0.35),
+    0 0 calc(160px * var(--orb-glow, 1)) calc(30px * var(--orb-glow, 1)) rgba(255,199,44,0.15),
     inset 0 -10px 24px rgba(80,50,10,0.4),
     inset 0 6px 12px rgba(255,240,210,0.16);
 }
@@ -155,13 +155,13 @@ h1 {
   z-index: 4;
 }
 .rail .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(247,242,234,0.16); transition: all 400ms var(--ease); }
-.rail .dot.done { background: rgba(201,169,97,0.5); }
+.rail .dot.done { background: rgba(255,199,44,0.55); }
 .rail .dot.active { background: var(--champagne); width: 18px; border-radius: 999px; }
 .rail .dot.flash { animation: rail-flash 1.2s var(--ease); }
 @keyframes rail-flash {
-  0%   { background: rgba(201,169,97,0.5); transform: scale(1); }
+  0%   { background: rgba(255,199,44,0.55); transform: scale(1); }
   20%  { background: var(--champagne); transform: scale(1.6); }
-  100% { background: rgba(201,169,97,0.5); transform: scale(1); }
+  100% { background: rgba(255,199,44,0.55); transform: scale(1); }
 }
 
 /* Content fades */
@@ -176,7 +176,7 @@ h1 {
   background: rgba(20, 34, 57, 0.96);
   backdrop-filter: blur(8px);
   color: var(--cream);
-  border: 1px solid rgba(201,169,97,0.3);
+  border: 1px solid rgba(255,199,44,0.35);
   padding: 12px 18px; border-radius: 999px;
   font-size: 12px; letter-spacing: 0.04em;
   display: flex; align-items: center; gap: 10px;
@@ -254,7 +254,7 @@ h1 {
 
 <div class="phone" id="phone">
   <div class="brand">
-    <span class="brand-mark">Paytm <em>Money</em></span>
+    <span class="brand-mark">ABCD</span>
     <span class="brand-meta" id="stageMeta">Stage 0 of 9</span>
   </div>
 
@@ -378,7 +378,7 @@ const contents = {
     slot: `<div class="card"><div class="eyebrow">Your three priorities</div>
            <h2>Where are we<br/>heading?</h2>
            <p class="lede">Home in Pune · Aanya's education · Retirement at 60.</p></div>`,
-    btm: `<div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(201,169,97,0.2); border-radius: 999px; padding: 12px; text-align: center; font-size: 12px; color: var(--cream);">
+    btm: `<div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,199,44,0.25); border-radius: 999px; padding: 12px; text-align: center; font-size: 12px; color: var(--cream);">
             <span style="color: var(--champagne);">●</span> Say "wait, we have three kids" or
             <button onclick="openPeek()" style="background:none;border:none;color: var(--champagne); text-decoration: underline; cursor: pointer; font-size: 12px;">tap to revise family</button>
           </div>`

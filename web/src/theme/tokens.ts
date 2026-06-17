@@ -7,18 +7,18 @@
  */
 
 export const colors = {
-  // Navy chrome — body, phone interior, dark surfaces.
-  navy: "#0A1628",
-  navySoft: "#161E2E",
-  navyEdge: "#1F2940",
+  // ABCD red chrome — body, phone interior, dark surfaces.
+  navy: "#B8181F",
+  navySoft: "#9E0E15",
+  navyEdge: "#7E0A11",
 
   // Cream — artifact cards, hero takeover.
   cream: "#F7F2EA",
   creamDeep: "#EBE3D5",
 
-  // Champagne — the single warm accent. Orb glow, plan number, CTAs.
-  champagne: "#C9A961",
-  champagneSoft: "#E1C589",
+  // ABCD yellow — the single warm accent. Orb glow, plan number, CTAs.
+  champagne: "#FFC72C",
+  champagneSoft: "#FFD75E",
 
   // Positive / negative signals.
   green: "#3D7C57",
@@ -29,16 +29,16 @@ export const colors = {
   ink: "#1A1F2E",
   inkSoft: "#5D6478",
 
-  // Ivory — for navy surfaces.
-  ivory: "#F5EDDB",
-  ivorySoft: "rgba(245, 237, 219, 0.62)",
-  ivoryHairline: "rgba(245, 237, 219, 0.08)",
+  // Ivory — for red surfaces. Warmed for legibility on red.
+  ivory: "#FFF5E6",
+  ivorySoft: "rgba(255, 245, 230, 0.72)",
+  ivoryHairline: "rgba(255, 199, 44, 0.10)",
 
-  // Orb moods.
-  orbIdle: "#5B7B9C",
-  orbListening: "#7AA7D4",
-  orbTalking: "#D4B66E",
-  orbPaused: "#3D4A5E",
+  // Orb moods — cream-to-gold spectrum, contrasts on red.
+  orbIdle: "#FFE9A3",
+  orbListening: "#FFF0C2",
+  orbTalking: "#FFC72C",
+  orbPaused: "#7A5C2E",
 } as const;
 
 export const fonts = {

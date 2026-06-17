@@ -7,18 +7,18 @@
  */
 
 :root {
-  /* Navy chrome */
-  --navy: #0A1628;
-  --navy-soft: #161E2E;
-  --navy-edge: #1F2940;
+  /* ABCD red chrome */
+  --navy: #B8181F;
+  --navy-soft: #9E0E15;
+  --navy-edge: #7E0A11;
 
   /* Cream surfaces */
   --cream: #F7F2EA;
   --cream-deep: #EBE3D5;
 
-  /* Champagne accent */
-  --champagne: #C9A961;
-  --champagne-soft: #E1C589;
+  /* ABCD yellow accent */
+  --champagne: #FFC72C;
+  --champagne-soft: #FFD75E;
 
   /* Signals */
   --green: #3D7C57;
@@ -29,16 +29,16 @@
   --ink: #1A1F2E;
   --ink-soft: #5D6478;
 
-  /* Ivory — for navy surfaces */
-  --ivory: #F5EDDB;
-  --ivory-soft: rgba(245, 237, 219, 0.62);
-  --ivory-hairline: rgba(245, 237, 219, 0.08);
+  /* Ivory — for red surfaces (warmed for legibility on red) */
+  --ivory: #FFF5E6;
+  --ivory-soft: rgba(255, 245, 230, 0.72);
+  --ivory-hairline: rgba(255, 199, 44, 0.10);
 
-  /* Orb moods */
-  --orb-idle: #5B7B9C;
-  --orb-listening: #7AA7D4;
-  --orb-talking: #D4B66E;
-  --orb-paused: #3D4A5E;
+  /* Orb moods — cream-to-gold, contrasts on red */
+  --orb-idle: #FFE9A3;
+  --orb-listening: #FFF0C2;
+  --orb-talking: #FFC72C;
+  --orb-paused: #7A5C2E;
 
   /* Type */
   --font-display: "Fraunces", "Iowan Old Style", "Apple Garamond", Georgia, serif;
@@ -69,8 +69,8 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   background:
-    radial-gradient(1100px 700px at 50% -10%, rgba(31, 41, 64, 0.6), transparent 60%),
-    var(--navy-soft);
+    radial-gradient(1100px 700px at 50% -10%, rgba(184, 24, 31, 0.55), transparent 60%),
+    #5C0810;
   color: var(--ivory);
   overflow: hidden;
 }

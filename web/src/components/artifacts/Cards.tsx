@@ -721,8 +721,8 @@ export function GoalTypesPickerCard({
           font-size: 9px;
           letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: #B89548;
-          background: rgba(201, 169, 97, 0.16);
+          color: #E8A800;
+          background: rgba(255, 199, 44, 0.20);
           border-radius: 999px;
           padding: 3px 8px;
         }
@@ -1055,8 +1055,8 @@ function CurveChart({ startYear, startValue, endValue }:
     <svg className="curve-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Inflation curve">
       <defs>
         <linearGradient id="curveFill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#C9A961" stopOpacity="0.30" />
-          <stop offset="100%" stopColor="#C9A961" stopOpacity="0" />
+          <stop offset="0%" stopColor="#FFC72C" stopOpacity="0.30" />
+          <stop offset="100%" stopColor="#FFC72C" stopOpacity="0" />
         </linearGradient>
       </defs>
       {/* dashed baseline + midline */}
@@ -1066,7 +1066,7 @@ function CurveChart({ startYear, startValue, endValue }:
             stroke="#E6DCC4" strokeDasharray="3 4" />
 
       <path d={fill} fill="url(#curveFill)" />
-      <path d={path} stroke="#B89548" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path d={path} stroke="#E8A800" strokeWidth="2.5" fill="none" strokeLinecap="round" />
 
       {/* start point */}
       <circle cx={x0} cy={y0} r="4" fill="#1A1F2E" />
@@ -1075,7 +1075,7 @@ function CurveChart({ startYear, startValue, endValue }:
       </text>
 
       {/* end point */}
-      <circle cx={x1} cy={y1} r="5" fill="#C9A961" />
+      <circle cx={x1} cy={y1} r="5" fill="#FFC72C" />
       <text x={x1 - 6} y={y1 - 10} textAnchor="end" className="curve-label end">
         {inr(endValue)}
       </text>
@@ -1191,7 +1191,7 @@ export function SipSplitCard({ data }: { data: ProposedPortfolio }) {
           text-transform: uppercase;
         }
         .tag.keep { background: rgba(61, 124, 87, 0.13); color: var(--green); }
-        .tag.add  { background: rgba(201, 169, 97, 0.16); color: #B89548; }
+        .tag.add  { background: rgba(255, 199, 44, 0.20); color: #E8A800; }
         .fund-name {
           min-width: 0;
           font-family: var(--font-display);
@@ -1209,7 +1209,7 @@ export function SipSplitCard({ data }: { data: ProposedPortfolio }) {
           text-transform: uppercase;
         }
         .amount {
-          color: #B89548;
+          color: #E8A800;
           font-size: 13px;
           font-weight: 600;
           font-feature-settings: "tnum";

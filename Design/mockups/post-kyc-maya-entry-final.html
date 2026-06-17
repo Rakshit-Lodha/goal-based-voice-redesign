@@ -3,20 +3,22 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Paytm Money · Maya Premium Entry (Final)</title>
+<title>Aditya Birla Capital · Maya Premium Entry (Final)</title>
 <style>
 :root {
-  --bg: #0b1220;
-  --surface: #131a26;
-  --line: rgba(255,255,255,0.08);
-  --text: #eef2f7;
-  --muted: #8d96a4;
-  --blue: #00b9f1;
-  --blue-2: #0078d7;
-  --green: #00d29a;
-  --gold-1: #f6e3a1;
-  --gold-2: #d7b56d;
-  --gold-3: #8a6a2c;
+  --red:        #D9232E;
+  --red-deep:   #B8181F;
+  --red-edge:   #7E0A11;
+  --yellow:     #FFC72C;
+  --yellow-2:   #FFD75E;
+  --gold-deep:  #A8731A;
+  --white:      #FFFFFF;
+  --paper:      #F6F7FA;
+  --paper-2:    #ECEFF5;
+  --ink:        #1A1F2E;
+  --ink-mute:   #6E7480;
+  --on-red:     #FFFFFF;
+  --on-red-mute: rgba(255,255,255,0.78);
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Inter, sans-serif;
 }
 
@@ -26,8 +28,8 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 0%, #1b2030, #06080d 60%);
-  color: var(--text);
+  background: radial-gradient(circle at 50% 0%, #5C0810, #1a0608 60%);
+  color: var(--ink);
   font-family: var(--font);
   padding: 40px 16px;
 }
@@ -36,9 +38,10 @@ body {
   max-width: 420px;
   margin: 0 auto 24px;
   text-align: center;
+  color: #fff5e6;
 }
 .caption h1 { margin: 0; font-size: 20px; font-weight: 700; }
-.caption p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.caption p { margin: 6px 0 0; color: #d8a8ab; font-size: 13px; line-height: 1.5; }
 
 .phone {
   width: 390px;
@@ -46,17 +49,20 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 36px;
-  background: #05070b;
+  background: #000;
   box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.06);
 }
+
+/* ============ HERO RED ZONE ============ */
 .screen {
-  height: 100%;
-  padding: 16px 16px 84px;
-  overflow-y: auto;
-  background: linear-gradient(180deg, #0b1220 0%, #060a12 100%);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--red) 0%, var(--red-deep) 100%);
+  overflow: hidden;
+  padding: 14px 20px 0;
 }
 
-/* Status bar */
+/* iOS status bar */
 .status {
   height: 24px;
   display: flex;
@@ -64,318 +70,420 @@ body {
   justify-content: space-between;
   font-size: 14px;
   font-weight: 600;
+  color: var(--on-red);
 }
 .status .right { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-.battery { padding: 1px 6px; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; }
+.battery { padding: 1px 6px; border: 1px solid rgba(255,255,255,0.45); border-radius: 4px; font-size: 10px; }
 
-/* Top bar */
+/* Top action row */
 .topbar {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: 36px 1fr 40px;
-  gap: 10px;
+  margin-top: 10px;
+  display: flex;
   align-items: center;
+  gap: 10px;
 }
-.logo {
+.holdings-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 14px;
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 8px 8px 18px 8px;
+  font-weight: 800; font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+.holdings-pill .arrow {
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--red-deep);
+  font-weight: 900;
+}
+.topbar .spacer { flex: 1; }
+.icon-btn {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.16);
+  color: var(--on-red);
+  font-size: 16px;
+  cursor: pointer;
+}
+.avatar {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--red-deep);
+  font-weight: 800; font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.dice-icon {
   width: 36px; height: 36px;
   display: grid; place-items: center;
   border-radius: 8px;
-  background: linear-gradient(180deg, #e9f5ff, #b9def5);
-  color: #0067bd;
-  font-weight: 800;
+  background: var(--white);
   font-size: 18px;
 }
-.search {
-  height: 40px;
-  padding: 0 16px;
-  display: flex; align-items: center;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 20px;
-  background: rgba(255,255,255,0.02);
-  color: #7d8693;
-  font-size: 14px;
+
+/* Hero cards row */
+.hero-cards {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-.avatar {
-  width: 40px; height: 40px;
+.hero-card {
+  position: relative;
+  height: 124px;
+  padding: 12px 14px 10px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  overflow: hidden;
+  cursor: pointer;
+}
+.hero-card .icon {
+  font-size: 28px;
+  line-height: 1;
+}
+.hero-card .value {
+  position: absolute;
+  left: 14px; bottom: 32px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--on-red);
+  letter-spacing: -0.01em;
+}
+.hero-card .label {
+  position: absolute;
+  left: 14px; bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--on-red);
+}
+.hero-card .chev {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: rgba(255,255,255,0.85);
+}
+
+/* ============ WHITE SHEET ============ */
+.sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 612px;
+  background: var(--paper);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 16px 100px;
+  overflow-y: auto;
+}
+.sheet::before {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: #C9CED6;
+  margin: 4px auto 12px;
+}
+
+/* Maya Wealth Desk card — the entry point */
+.maya-card {
+  display: block;
+  position: relative;
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 92% 30%, rgba(255,233,163,0.55), transparent 42%),
+    linear-gradient(135deg, #1A0508 0%, #3a1a04 60%, #1A0508 100%);
+  border: 1px solid var(--yellow);
+  color: var(--on-red);
+  text-decoration: none;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 92px;
+}
+.maya-card .badge {
+  display: inline-block;
+  padding: 3px 8px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.maya-card h2 {
+  margin: 8px 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  max-width: 220px;
+}
+.maya-card p {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255,245,230,0.78);
+  line-height: 1.4;
+  max-width: 220px;
+}
+.maya-card .orb {
+  position: absolute;
+  right: -10px; top: 50%;
+  transform: translateY(-50%);
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff5d1 0 12%, #FFD75E 36%, #C2362E 70%, #5C0810 100%);
+  box-shadow: 0 0 24px rgba(255,199,44,0.45);
+}
+.maya-card .arrow {
+  position: absolute;
+  right: 16px; bottom: 16px;
+  width: 28px; height: 28px;
   display: grid; place-items: center;
   border-radius: 50%;
-  background: #11203a;
-  color: #4ec9ff;
-  border: 1px solid rgba(78,201,255,0.3);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-/* Ticker */
-.ticker {
-  margin-top: 16px;
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  font-size: 13px;
-  color: #cfd6df;
-}
-.ticker b { color: var(--text); font-weight: 700; margin-right: 6px; }
-.up { color: var(--green); }
-.ticker .caret { margin-left: auto; color: var(--muted); }
-
-/* Section title */
-.section {
-  margin-top: 22px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.section h3 { margin: 0; font-size: 17px; font-weight: 700; }
-.section a { color: var(--blue); font-size: 13px; text-decoration: none; }
-
-/* Tiles */
-.tiles {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.tile {
-  padding: 12px 10px;
-  min-height: 72px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
-  font-size: 13px;
-  font-weight: 700;
-  position: relative;
-  overflow: hidden;
-}
-.tile span { position: absolute; right: 6px; bottom: 6px; font-size: 14px; opacity: 0.85; }
-
-/* Portfolio panel */
-.panel {
-  margin-top: 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
-  overflow: hidden;
-}
-.tabs {
-  display: flex;
-  gap: 22px;
-  padding: 14px 16px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-weight: 900;
   font-size: 14px;
-  color: var(--muted);
-  border-bottom: 1px solid var(--line);
 }
-.tabs .active { color: var(--text); position: relative; }
-.tabs .active::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: -15px;
-  height: 2px;
-  background: var(--blue);
-}
-.empty {
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.empty h4 { margin: 0 0 6px; font-size: 16px; }
-.empty p { margin: 0; color: #b3bac4; font-size: 12px; max-width: 200px; line-height: 1.4; }
-.cta {
-  margin-top: 12px;
-  height: 36px;
-  padding: 0 16px;
-  display: inline-flex;
-  align-items: center;
-  border: 0;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--blue), var(--blue-2));
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-}
-.coins {
-  width: 100px; height: 70px;
-  background:
-    radial-gradient(circle at 30% 60%, #ffbf46 12px, transparent 13px),
-    radial-gradient(circle at 60% 50%, #ffbf46 14px, transparent 15px),
-    radial-gradient(circle at 85% 40%, #ffbf46 16px, transparent 17px);
-  opacity: 0.7;
-}
-.funds {
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(242,161,93,0.12);
-  font-size: 13px;
-  color: #f2c89a;
-}
-.funds strong { color: #fff; margin-left: 6px; }
-.funds a { color: var(--blue); text-decoration: none; font-weight: 700; }
 
-/* Bottom nav */
+/* Track cards 2x2 */
+.tracks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.track {
+  position: relative;
+  height: 156px;
+  padding: 14px;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+  overflow: hidden;
+  cursor: pointer;
+}
+.track .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.track .chev-circle {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid #D0D5DD;
+  font-size: 11px;
+  color: var(--ink-mute);
+}
+.track .art {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 44px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  font-size: 42px;
+}
+.track .foot {
+  position: absolute;
+  left: 14px; right: 14px; bottom: 12px;
+  font-size: 11px;
+  color: var(--ink-mute);
+  line-height: 1.35;
+}
+.track .foot .row { display: flex; align-items: center; gap: 6px; }
+.track .foot .row + .row { margin-top: 2px; }
+.track .eye {
+  position: absolute;
+  right: 14px; bottom: 14px;
+  color: #B3B9C3;
+}
+
+/* ============ BOTTOM NAV ============ */
 .nav {
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 70px;
+  height: 86px;
+  z-index: 5;
+  overflow: visible;
+}
+.nav-bg {
+  position: absolute;
+  left: 0; right: 0; top: -22px;
+  width: 100%; height: 108px;
+  overflow: visible;
+  pointer-events: none;
+}
+.nav-items {
+  position: relative;
+  z-index: 1;
+  height: 100%;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  align-items: center;
-  background: rgba(15,20,28,0.96);
-  border-top: 1px solid var(--line);
-  color: #97a0ad;
+  align-items: end;
+  padding-bottom: 12px;
+}
+.nav-item {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
   font-size: 10px;
+  color: #6E7480;
+  font-weight: 600;
 }
-.nav-item { display: grid; justify-items: center; gap: 4px; }
-.nav-item i { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid currentColor; }
-.nav .active { color: var(--blue); }
-
-/* ============================================================
-   MAYA PREMIUM HERO CARD
-   ============================================================ */
-.maya-hero {
-  display: block;
-  margin-top: 16px;
-  position: relative;
-  padding: 20px;
-  border-radius: 18px;
-  overflow: hidden;
-  color: var(--text);
-  text-decoration: none;
-  background:
-    radial-gradient(circle at 78% 30%, rgba(246,227,161,0.22), transparent 36%),
-    radial-gradient(circle at 90% 80%, rgba(0,168,232,0.14), transparent 38%),
-    linear-gradient(145deg, #221c10 0%, #131820 60%, #07090d 100%);
-  border: 1px solid rgba(215,181,109,0.25);
-  cursor: pointer;
+.nav-item .ic {
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  font-size: 16px;
 }
-.maya-hero::before {
-  content: "";
-  position: absolute;
-  right: -40px; top: 20px;
-  width: 150px; height: 150px;
+.nav-item.active {
+  color: var(--red);
+}
+.nav-item.active .badge {
+  width: 44px; height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 36% 30%, #fff5d1 0 6%, #e9c978 26%, #6f8f9d 56%, #182d3e 78%);
-  box-shadow: 0 0 40px rgba(215,181,109,0.35);
-  opacity: 0.9;
-}
-.maya-hero h2 {
-  margin: 0;
-  max-width: 230px;
-  font-size: 24px;
-  line-height: 1.15;
-  font-weight: 700;
-  position: relative;
-}
-.maya-hero p {
-  margin: 10px 0 16px;
-  max-width: 220px;
-  color: #bfc7d0;
-  font-size: 12px;
-  line-height: 1.5;
-  position: relative;
-}
-.maya-hero .gold-cta {
-  position: relative;
-  height: 40px;
-  padding: 0 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 20px;
-  color: #1a1408;
-  background: linear-gradient(135deg, var(--gold-1), var(--gold-2));
+  background: var(--white);
+  border: 2px solid var(--red);
+  display: grid; place-items: center;
+  margin-top: -28px;
+  margin-bottom: 4px;
+  color: var(--red);
+  font-size: 20px;
   font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 0.01em;
-  box-shadow: 0 6px 16px rgba(215,181,109,0.25);
+  box-shadow: 0 4px 10px rgba(217,35,46,0.18);
 }
-.maya-hero .gold-cta::after { content: "›"; font-size: 16px; }
-
+.abcd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 14px; height: 14px;
+  gap: 1px;
+  font-size: 7px;
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1;
+}
+.abcd-grid span { display: grid; place-items: center; }
 </style>
 </head>
 <body>
   <header class="caption">
-    <h1>Maya · Premium Entry (Final)</h1>
-    <p>Gold-accented hero card placed below the index ticker, on the Paytm Money post-KYC dashboard.</p>
+    <h1>ABCD Home · Maya Premium Entry</h1>
+    <p>Aditya Birla Capital post-KYC home, faithful to the ABCD app: red hero with My Holdings, CashBack and ABCD Coins; white sheet with the Maya Wealth Desk entry and the Track grid.</p>
   </header>
 
   <div class="phone">
     <div class="screen">
-      <!-- Status -->
+      <!-- Status bar -->
       <div class="status">
-        <span>3:12</span>
-        <div class="right"><span>•••</span><span>⌁</span><span class="battery">62</span></div>
+        <span>8:54</span>
+        <div class="right"><span>5G</span><span class="battery">20</span></div>
       </div>
 
-      <!-- Top bar -->
+      <!-- Top action row -->
       <div class="topbar">
-        <div class="logo">₹</div>
-        <div class="search">Search Stocks, F&O or MF</div>
-        <div class="avatar">HI</div>
+        <button class="holdings-pill">My Holdings <span class="arrow">↗</span></button>
+        <div class="spacer"></div>
+        <div class="dice-icon" title="Rewards">🎲</div>
+        <div class="icon-btn" title="Notifications">🔔</div>
+        <div class="avatar">RL</div>
       </div>
 
-      <!-- ===== MAYA PREMIUM HERO CARD (entry point) ===== -->
-      <a href="http://localhost:5174" class="maya-hero" aria-label="Open Maya Wealth Desk">
-        <h2>Plan your first move with Maya</h2>
-        <p>Your personal wealth expert is ready and will help you make your first move!</p>
-        <span class="gold-cta">Start Now</span>
-      </a>
-
-      <!-- Ticker -->
-      <div class="ticker">
-        <span><b>NIFTY</b>23,622.90 <span class="up">+461.30 (1.99%)</span></span>
-        <span><b>SENSEX</b>75,527.95 <span class="up">+1,695</span></span>
-        <span class="caret">⌄</span>
-      </div>
-
-      <!-- Invest and Trade -->
-      <div class="section">
-        <h3>Invest and Trade</h3>
-        <a href="#">View All</a>
-      </div>
-      <div class="tiles">
-        <div class="tile">Stocks <span>📈</span></div>
-        <div class="tile">F&O <span>📊</span></div>
-        <div class="tile">Mutual Funds <span>💰</span></div>
-        <div class="tile">MTF <span>⚡</span></div>
-      </div>
-
-      <!-- Portfolio Overview -->
-      <div class="section">
-        <h3>Portfolio Overview</h3>
-        <a href="#">Hide Portfolio 👁</a>
-      </div>
-      <div class="panel">
-        <div class="tabs">
-          <span class="active">All</span>
-          <span>Stocks</span>
-          <span>Mutual Funds</span>
-          <span>NPS</span>
+      <!-- Hero frosted cards -->
+      <div class="hero-cards">
+        <div class="hero-card">
+          <div class="icon">💰</div>
+          <div class="value">₹0</div>
+          <div class="label">CashBack</div>
+          <div class="chev">›</div>
         </div>
-        <div class="empty">
-          <div>
-            <h4>Start Investing!</h4>
-            <p>You're missing out on additional gains across multiple investment products</p>
-            <button class="cta">Invest Now ›</button>
-          </div>
-          <div class="coins"></div>
-        </div>
-        <div class="funds">
-          <span>Available Funds: <strong>₹0.00</strong> · running low</span>
-          <a href="#">₹ Add Funds</a>
+        <div class="hero-card">
+          <div class="icon">🪙</div>
+          <div class="value">50</div>
+          <div class="label">ABCD Coins</div>
+          <div class="chev">›</div>
         </div>
       </div>
     </div>
 
-    <!-- Bottom nav -->
+    <!-- White sheet -->
+    <div class="sheet">
+      <!-- Maya Wealth Desk entry -->
+      <a href="http://localhost:5174" class="maya-card" aria-label="Open Maya Wealth Desk">
+        <span class="badge">Wealth Desk</span>
+        <h2>Plan your first move with Maya</h2>
+        <p>Your private wealth expert is ready — voice-led goal planning in minutes.</p>
+        <div class="orb"></div>
+        <div class="arrow">›</div>
+      </a>
+
+      <!-- Track cards 2x2 -->
+      <div class="tracks">
+        <div class="track">
+          <div class="title">Portfolio Track <span class="chev-circle">›</span></div>
+          <div class="art">💼</div>
+          <div class="foot">
+            <div class="row"><span>🔒</span><span>₹XX,XXX</span></div>
+            <div class="row"><span>⊕</span><span>Link account</span></div>
+          </div>
+          <div class="eye">⊘</div>
+        </div>
+        <div class="track">
+          <div class="title">Credit Track <span class="chev-circle">›</span></div>
+          <div class="art">📊</div>
+          <div class="foot">Check your score &amp; trends</div>
+        </div>
+        <div class="track">
+          <div class="title">Vehicle Track <span class="chev-circle">›</span></div>
+          <div class="art">🚗</div>
+        </div>
+        <div class="track">
+          <div class="title">Spend Track <span class="chev-circle">›</span></div>
+          <div class="art">🧮</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav with curved scoop -->
     <nav class="nav">
-      <div class="nav-item active"><i></i><span>Home</span></div>
-      <div class="nav-item"><i></i><span>Watchlist</span></div>
-      <div class="nav-item"><i></i><span>Portfolio</span></div>
-      <div class="nav-item"><i></i><span>Orders</span></div>
-      <div class="nav-item"><i></i><span>Funds</span></div>
+      <svg class="nav-bg" viewBox="0 -22 390 108" preserveAspectRatio="none">
+        <path d="M 0 30 L 140 30 Q 195 -28 250 30 L 390 30 L 390 86 L 0 86 Z" fill="#FFFFFF"/>
+        <path d="M 0 30 L 140 30 Q 195 -28 250 30 L 390 30" stroke="#FFC72C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="nav-items">
+        <div class="nav-item">
+          <div class="ic">💵</div>
+          <span>Invest</span>
+        </div>
+        <div class="nav-item">
+          <div class="ic">
+            <div class="abcd-grid"><span>a</span><span>b</span><span>c</span><span>d</span></div>
+          </div>
+          <span>Home</span>
+        </div>
+        <div class="nav-item active">
+          <div class="badge">📈</div>
+          <span>My Track</span>
+        </div>
+        <div class="nav-item">
+          <div class="ic">🤝</div>
+          <span>Loans</span>
+        </div>
+        <div class="nav-item">
+          <div class="ic">🛡</div>
+          <span>Insure</span>
+        </div>
+      </div>
     </nav>
   </div>
 </body>

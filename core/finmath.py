@@ -81,16 +81,16 @@ def financial_ratios(monthly_income: float, monthly_expenses: float, monthly_emi
     savings_rate = surplus / monthly_income if monthly_income else 0.0
     dti = monthly_emi / monthly_income if monthly_income else 0.0
 
-    if savings_rate > 0.60:
+    if savings_rate > 0.15:
         savings_band = "good"
-    elif savings_rate >= 0.40:
+    elif savings_rate >= 0.05:
         savings_band = "average"
     else:
         savings_band = "bad"
 
-    if dti < 0.10:
+    if dti < 0.05:
         dti_band = "good"
-    elif dti <= 0.20:
+    elif dti <= 0.25:
         dti_band = "average"
     else:
         dti_band = "bad"

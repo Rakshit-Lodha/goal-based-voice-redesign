@@ -45,7 +45,7 @@ export default function OtpSheet({
       <div className="otp-help">Demo OTP is 1234</div>
       {error && <div className="otp-error">{error}</div>}
       <button type="submit" disabled={submitting || value.length === 0}>
-        {submitting ? "Verifying..." : isAa ? "Continue ->" : "Authenticate with OTP"}
+        {submitting ? "Verifying..." : "Authenticate with OTP"}
       </button>
       {isAa && <div className="aa-footer">powered by <strong>RBI-regulated AA</strong> · Finvu</div>}
 

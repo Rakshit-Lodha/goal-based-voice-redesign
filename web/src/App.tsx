@@ -14,6 +14,7 @@ import LedgerPanel from "./components/LedgerPanel";
 import CascadeToast, { type CascadeDiff } from "./components/CascadeToast";
 import PlanHero from "./screens/PlanHero";
 import EntryScreen from "./screens/EntryScreen";
+import IntroScreen from "./screens/IntroScreen";
 import { useRtviEvent } from "./pcReact";
 import { useMood, type Mood } from "./state/useMood";
 import { usePause } from "./state/usePause";
@@ -68,6 +69,7 @@ function Conversation() {
   const micState = live ? "live" : dialing ? "connecting" : "idle";
   const isHero = active?.kind === "plan_hero";
   const hasSummonedSurface = !!active || !!otp;
+  const showIntro = !live && !dialing && !active && !otp && !callError;
 
   useRtviEvent("transportStateChanged", (state) => {
     const nextState = state as TransportState;
@@ -170,8 +172,10 @@ function Conversation() {
         summoned={hasSummonedSurface}
         corner={false}
       />
-      {!isHero && <Subtitle mood={mood} />}
-      {isHero ? (
+      {!isHero && !showIntro && <Subtitle mood={mood} />}
+      {showIntro ? (
+        <IntroScreen onStart={startCall} dialing={dialing} />
+      ) : isHero ? (
         <PlanHero data={active.data as never} onDismiss={dismiss} />
       ) : (
         <Artifact artifact={active} onDismiss={dismiss} />
@@ -191,7 +195,7 @@ function Conversation() {
         onRevise={onRevise}
       />
       {cascade && <CascadeToast diff={cascade} />}
-      {!isHero && (
+      {!isHero && !showIntro && (
         <MicAffordance
           state={micState}
           onStart={startCall}

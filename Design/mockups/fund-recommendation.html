@@ -8,22 +8,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --navy:        #0A1628;
-  --navy-2:      #142239;
+  --navy:        #B8181F;
+  --navy-2:      #9E0E15;
   --cream:       #F7F2EA;
   --cream-2:     #EFE7D6;
   --hairline:    #E6DECF;
   --hairline-2:  #D8CFBC;
-  --champagne:   #C9A961;
-  --champagne-2: #B89548;
+  --champagne:   #FFC72C;
+  --champagne-2: #E8A800;
   --green:       #3D7C57;
-  --red:         #9E4B45;
+  --red:         #C2362E;
   --blue:        #4A6FAE;
   --ink:         #1A1F2E;
   --ink-mute:    #6B6356;
   --ink-soft:    #4A4538;
-  --on-dark:     #F7F2EA;
-  --on-dark-mute:#8C97AB;
+  --on-dark:     #FFF5E6;
+  --on-dark-mute:#F4B9BD;
   --serif: 'Fraunces', Georgia, serif;
   --sans: 'Inter', -apple-system, system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -31,7 +31,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   min-height: 100vh;
-  background: #161E2E;
+  background: #5C0810;
   color: var(--on-dark);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -73,7 +73,7 @@ body { padding: 56px 32px 80px; }
   border-radius: 44px;
   background: var(--navy);
   background-image:
-    radial-gradient(circle at 50% 30%, rgba(155,175,220,0.10), transparent 52%),
+    radial-gradient(circle at 50% 30%, rgba(255,199,44,0.10), transparent 52%),
     radial-gradient(circle at 50% 90%, rgba(10,22,40,0.70), transparent 52%);
   box-shadow: 0 50px 100px -20px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
   overflow: hidden;
@@ -93,6 +93,7 @@ body { padding: 56px 32px 80px; }
   font-family: var(--serif);
   font-weight: 500;
   font-size: 16px;
+  color: var(--champagne);
 }
 .brand-mark em { color: var(--champagne); font-style: italic; }
 .ledger-chip {
@@ -124,10 +125,10 @@ body { padding: 56px 32px 80px; }
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #F2D58F 0%, #C9A961 38%, #6B4F22 85%);
+  background: radial-gradient(circle at 35% 30%, #FFE9A3 0%, #FFC72C 38%, #A8731A 85%);
   box-shadow:
-    0 0 72px 12px rgba(201,169,97,0.32),
-    0 0 140px 28px rgba(201,169,97,0.14),
+    0 0 72px 12px rgba(255,199,44,0.32),
+    0 0 140px 28px rgba(255,199,44,0.14),
     inset 0 -10px 22px rgba(80,50,10,0.38),
     inset 0 7px 12px rgba(255,240,210,0.16);
   animation: breathe 1.7s ease-in-out infinite;
@@ -280,7 +281,7 @@ h2.xl {
   text-transform: uppercase;
 }
 .tag.keep { background: rgba(61,124,87,0.13); color: var(--green); }
-.tag.switch { background: rgba(201,169,97,0.16); color: var(--champagne-2); }
+.tag.switch { background: rgba(255,199,44,0.20); color: var(--champagne-2); }
 .tag.stop { background: rgba(158,75,69,0.12); color: var(--red); }
 .fund-name {
   font-family: var(--serif);
@@ -353,7 +354,7 @@ h2.xl {
   right: 32px;
   bottom: 592px;
   z-index: 2;
-  border: 1px solid rgba(201,169,97,0.22);
+  border: 1px solid rgba(255,199,44,0.25);
   border-radius: 999px;
   padding: 11px 14px;
   background: rgba(247,242,234,0.06);
@@ -369,7 +370,7 @@ h2.xl {
 </head>
 <body>
   <div class="page-head">
-    <h1>Paytm <em>Money</em> · Maya fund recommendation</h1>
+    <h1>Aditya Birla <em>Capital</em> · Maya fund recommendation</h1>
     <p>Focused mockup for the moment after MF Central returns current mutual fund data. The flow makes Maya's recommendation visual: diagnose the existing portfolio, explain the target allocation, then show explicit keep / switch / stop actions.</p>
   </div>
 
@@ -377,7 +378,7 @@ h2.xl {
     <div class="cell">
       <div class="phone">
         <div class="brand">
-          <span class="brand-mark">Paytm <em>Money</em></span>
+          <span class="brand-mark">ABCD</span>
           <div class="ledger-chip"><span class="dot"></span><span>4 · confirmed</span></div>
         </div>
         <div class="orb-wrap"><div class="orb"></div></div>
@@ -410,7 +411,7 @@ h2.xl {
     <div class="cell">
       <div class="phone">
         <div class="brand">
-          <span class="brand-mark">Paytm <em>Money</em></span>
+          <span class="brand-mark">ABCD</span>
           <div class="ledger-chip"><span class="dot"></span><span>5 · confirmed</span></div>
         </div>
         <div class="orb-wrap"><div class="orb"></div></div>
@@ -427,7 +428,7 @@ h2.xl {
           <div class="thesis">
             <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="Recommended fund allocation">
               <circle cx="60" cy="60" r="42" fill="none" stroke="#EFE7D6" stroke-width="18"/>
-              <circle cx="60" cy="60" r="42" fill="none" stroke="#C9A961" stroke-width="18" stroke-dasharray="132 264" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="42" fill="none" stroke="#FFC72C" stroke-width="18" stroke-dasharray="132 264" stroke-dashoffset="0" transform="rotate(-90 60 60)"/>
               <circle cx="60" cy="60" r="42" fill="none" stroke="#3D7C57" stroke-width="18" stroke-dasharray="66 264" stroke-dashoffset="-132" transform="rotate(-90 60 60)"/>
               <circle cx="60" cy="60" r="42" fill="none" stroke="#4A6FAE" stroke-width="18" stroke-dasharray="40 264" stroke-dashoffset="-198" transform="rotate(-90 60 60)"/>
               <circle cx="60" cy="60" r="42" fill="none" stroke="#1A1F2E" stroke-width="18" stroke-dasharray="26 264" stroke-dashoffset="-238" transform="rotate(-90 60 60)"/>
@@ -455,7 +456,7 @@ h2.xl {
     <div class="cell">
       <div class="phone">
         <div class="brand">
-          <span class="brand-mark">Paytm <em>Money</em></span>
+          <span class="brand-mark">ABCD</span>
           <div class="ledger-chip"><span class="dot"></span><span>6 · confirmed</span></div>
         </div>
         <div class="orb-wrap"><div class="orb"></div></div>

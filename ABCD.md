@@ -1,6 +1,6 @@
-# Paytm Money · Maya — Affluent UI Redesign
+# Aditya Birla Capital · Maya — Affluent UI Redesign
 
-Interview-ready redesign of the Maya voice agent for Paytm Money's Affluent++ DIY segment. Conversation-first (RM, not IVR): the orb is the experience, artifacts are summoned moments.
+Interview-ready redesign of the Maya voice agent for Aditya Birla Capital's Affluent++ DIY segment. Conversation-first (RM, not IVR): the orb is the experience, artifacts are summoned moments.
 
 **Branch:** `redesign/affluent-ui` off `63b8efd Voice Bot V2`
 **Target user:** Affluent++, DIY product + DIY KYC, knows what they want
@@ -35,7 +35,7 @@ Interview-ready redesign of the Maya voice agent for Paytm Money's Affluent++ DI
 
 ### Visual references
 - `Design/refs/Wireframe/` — 12 hand-drawn wireframes (the original locked 9-stage flow)
-- `Design/refs/Screenshots/` — real Paytm Money home, MF Central consent, Finvu AA OTP screens
+- `Design/refs/Screenshots/` — real Aditya Birla Capital home, MF Central consent, Finvu AA OTP screens
 
 ### Existing code (keep, do not rewrite)
 - `core/finmath.py` — all math, unit-tested
@@ -93,7 +93,7 @@ Mark each item `[x]` as completed. Commit at the end of each phase with message 
 - [x] Create `web/src/components/Subtitle.tsx` (single italic Fraunces line under orb, who/what split)
 - [x] Create `web/src/components/MicAffordance.tsx` (subtle bottom-centre tap-to-speak; `Tap or just talk` label)
 - [x] Wire orb tap → pause/resume Maya TTS via `usePause` (mutes bot `MediaStreamTrack.enabled`)
-- [x] Create `web/src/components/BrandBar.tsx` (Paytm Money mark left + ledger chip placeholder right)
+- [x] Create `web/src/components/BrandBar.tsx` (Aditya Birla Capital mark left + ledger chip placeholder right)
 - [x] Verify: full empty conversation experience — talk to Maya, see her speak, tap orb to pause, no artifacts yet
 - [x] Commit: `phase-3: conversation shell with pause + mic`
 
