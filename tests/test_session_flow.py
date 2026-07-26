@@ -39,7 +39,7 @@ def test_next_step_moves_to_investments_after_cashflow_confirmation():
 
     assert progress()["finances"] == "pending"
     assert "recap the savings rate" in next_step()
-    assert "EMI-to-income ratio" in next_step()
+    assert "monthly loan repayments as a share of income" in next_step()
     assert "PPF" in next_step()
     assert "US stocks" in next_step()
     assert "international stocks" in next_step()

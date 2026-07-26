@@ -25,6 +25,11 @@ def _named(fn):
 def test_registered_tool_names_match_planning_contract():
     """The tool registry exposes the planning tools Maya is allowed to call."""
     expected = [
+        "confirm_resume",
+        "choose_experience",
+        "simulate_life_event",
+        "analyze_financial_emergency",
+        "commit_emergency_plan",
         "assess_risk_profile",
         "add_family",
         "pull_mf_central",

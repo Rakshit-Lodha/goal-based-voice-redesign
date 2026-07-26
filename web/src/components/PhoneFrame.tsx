@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
  * on the navy-soft body background. Mobile (≤480px): full-bleed — the frame
  * collapses to the real viewport, no chrome.
  *
- * Open question #1 (ABCD.md): resolved to "clean rounded rectangle".
+ * A clean rounded rectangle keeps the product demo focused on the experience.
  * A full device mockup (notch/bezel) competes with the orb visually and reads
  * kitsch at interview-premium register.
  */
@@ -31,7 +31,7 @@ export default function PhoneFrame({ children }: { children?: ReactNode }) {
           max-height: 100dvh;
           border-radius: var(--phone-radius);
           background:
-            radial-gradient(120% 60% at 50% 0%, rgba(255, 199, 44, 0.08), transparent 60%),
+            radial-gradient(120% 60% at 50% 0%, rgba(88, 214, 177, 0.08), transparent 60%),
             var(--navy);
           box-shadow:
             0 1px 0 0 rgba(245, 237, 219, 0.04) inset,

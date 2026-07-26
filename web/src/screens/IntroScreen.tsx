@@ -3,7 +3,7 @@ import { useState } from "react";
 /**
  * The pre-call intro surface. Shown after the user taps the Maya hero in
  * EntryScreen and before the WebRTC call starts. Sets the expectation for
- * the conversation: ten minutes, one call, an actionable plan.
+ * the conversation: fifteen minutes, one call, an actionable plan.
  *
  * Orb sits above (rendered by Conversation). This component contributes
  * the headline, lede, and the two CTAs at the bottom.
@@ -30,7 +30,7 @@ export default function IntroScreen({
             <li>You leave with a personalised plan PDF.</li>
           </ul>
         ) : (
-          <p>Ten minutes. One conversation.<br />A plan you can act on today.</p>
+          <p>Fifteen minutes. One conversation.<br />A plan you can act on today.</p>
         )}
       </div>
 

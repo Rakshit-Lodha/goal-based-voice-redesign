@@ -91,3 +91,48 @@ def test_run_eval_fails_when_provider_pull_order_is_invalid():
 
     failed = {check.name for check in result.checks if not check.passed}
     assert "tool_order_is_allowed" in failed
+
+
+def test_run_eval_accepts_a_completed_simulator_comparison():
+    transcript = {
+        "events": [
+            _message("assistant"),
+            _message("user"),
+            _tool_call("choose_experience", {"choice": "simulator"}),
+            _tool_result("choose_experience", {"choice": "simulator"}),
+            _tool_call("simulate_life_event", {"event_type": "career_break"}),
+            _tool_result("simulate_life_event", {
+                "scenario": {"reserve_required": 900_000},
+                "recommendation": "Build the reserve first.",
+            }),
+        ]
+    }
+
+    result = evaluate_transcript(transcript)
+
+    assert result.passed is True
+
+
+def test_run_eval_accepts_seeded_traditional_goal_flow():
+    transcript = {
+        "events": [
+            _message("assistant"),
+            _message("user"),
+            _tool_call("choose_experience", {"choice": "traditional"}),
+            _tool_result("choose_experience", {"choice": "traditional"}),
+            _tool_call("add_goal"),
+            _tool_result("add_goal"),
+            _tool_call("project_existing_corpus"),
+            _tool_result("project_existing_corpus"),
+            _tool_call("compute_gap_and_sip"),
+            _tool_result("compute_gap_and_sip"),
+            _tool_call("build_goal_portfolio"),
+            _tool_result("build_goal_portfolio"),
+            _tool_call("generate_plan_pdf"),
+            _tool_result("generate_plan_pdf", {"url": "/output/plan.pdf"}),
+        ]
+    }
+
+    result = evaluate_transcript(transcript)
+
+    assert result.passed is True

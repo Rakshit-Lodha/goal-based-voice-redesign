@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { ArtifactEvent } from "../types";
 import {
   AaConsentSheet,
+  EmergencyShockwaveCard,
   FamilyRecapCard,
   FundsPickerSheet,
   GoalsRecapCard,
@@ -12,6 +13,8 @@ import {
   MfcConsentSheet,
   MfcReviewCard,
   RiskRevealCard,
+  ScenarioComparisonCard,
+  SimulatorMenuCard,
   SipPlanFallback,
   SipSplitCard,
 } from "../components/artifacts/Cards";
@@ -34,6 +37,12 @@ export function renderArtifact(event: ArtifactEvent): ReactNode {
       return <InvestmentsCard data={event.data as never} />;
     case "goal_types_picker":
       return <GoalTypesPickerCard data={event.data as never} />;
+    case "simulator_menu":
+      return <SimulatorMenuCard data={event.data as never} />;
+    case "scenario_comparison":
+      return <ScenarioComparisonCard data={event.data as never} />;
+    case "emergency_shockwave":
+      return <EmergencyShockwaveCard data={event.data as never} />;
     case "goals_recap":
       return <GoalsRecapCard data={event.data as never} />;
     case "inflation_curve":

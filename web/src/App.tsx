@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import type { TransportState } from "@pipecat-ai/client-js";
 import { PipecatClientProvider, PipecatClientAudio, usePipecatClient } from "@pipecat-ai/client-react";
-import { API_BASE, createClient } from "./pcClient";
+import { API_BASE, createClient, type MemoryMode } from "./pcClient";
 import PhoneFrame from "./components/PhoneFrame";
 import BrandBar from "./components/BrandBar";
 import Orb from "./components/Orb";
@@ -22,17 +22,72 @@ import { useArtifactQueue } from "./state/artifactQueue";
 import { useStateSnapshot } from "./state/useStateSnapshot";
 import { toLedgerRows } from "./state/ledgerRows";
 import type { CascadeDiffEvent, OtpRequestEvent, ServerMessage } from "./types";
+import {
+  entryModeForPath,
+  isMemoryCard,
+  type MemoryLoadState,
+} from "./memory";
+
+const DEMO_USER_ID = "rakshit";
 
 export default function App() {
-  const client = useMemo(() => createClient(), []);
+  const entryMode = entryModeForPath(window.location.pathname);
+  const [memoryState, setMemoryState] = useState<MemoryLoadState>(
+    entryMode === "resume" ? { status: "loading" } : { status: "idle" },
+  );
+  const [callMode, setCallMode] = useState<MemoryMode>(entryMode);
+  const client = useMemo(() => createClient(callMode), [callMode]);
   const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    if (entryMode !== "resume") return;
+    const controller = new AbortController();
+    void fetch(`${API_BASE}/api/memory/latest?user_id=${DEMO_USER_ID}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Memory request failed: ${response.status}`);
+        const body: unknown = await response.json();
+        setMemoryState(isMemoryCard(body)
+          ? { status: "available", memory: body }
+          : { status: "unavailable" });
+      })
+      .catch((error) => {
+        if ((error as Error).name !== "AbortError") {
+          console.warn("Could not load saved memory; using fresh mode", error);
+          setMemoryState({ status: "unavailable" });
+        }
+      });
+    return () => controller.abort();
+  }, [entryMode]);
+
+  const enterConversation = useCallback((mode: MemoryMode) => {
+    setCallMode(mode);
+    setEntered(true);
+  }, []);
 
   return (
     // client-react's bundled .d.ts declares its own PipecatClient class, nominally
     // distinct from the one we construct though identical at runtime — cast here.
     <PipecatClientProvider client={client as never}>
       <PhoneFrame>
-        {entered ? <Conversation /> : <EntryScreen onStart={() => setEntered(true)} />}
+        {entered ? (
+          <Conversation />
+        ) : (
+          <EntryScreen
+            routeMode={entryMode}
+            memoryState={memoryState}
+            onStart={() => enterConversation(
+              entryMode === "simulator"
+                ? "simulator"
+                : memoryState.status === "available"
+                  ? "resume"
+                  : "fresh",
+            )}
+            onStartOver={() => enterConversation("fresh")}
+            onEmergency={() => enterConversation("emergency")}
+          />
+        )}
       </PhoneFrame>
       {/* Plays Maya's TTS audio coming back from the bot. */}
       <PipecatClientAudio />
@@ -112,7 +167,7 @@ function Conversation() {
       await client.connect();
     } catch (error) {
       console.error("connect failed", error);
-      setCallError("Could not start call. Check mic permission and backend :8001, then tap again.");
+      setCallError("Could not start call. Check mic permission and backend :8000, then tap again.");
       await client.disconnect().catch(() => undefined);
       setDialing(false);
     }

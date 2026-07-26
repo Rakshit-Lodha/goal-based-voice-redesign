@@ -97,5 +97,11 @@ export const DEMO_SNAPSHOT: Snapshot = {
   plan_pdf_url: null,
   progress: { risk: "done", family: "done", mfc: "done", aa: "done", finances: "done", goals: "done", gap: "done", portfolio_plan: "done", pdf: "pending" },
   last_event: "build_goal_portfolio",
+  simulator_mode: false,
+  simulator_choice: null,
+  last_simulation: null,
+  emergency_mode: false,
+  pending_emergency_plan: null,
+  emergency_plan_applied: false,
   tick: 999,
 };

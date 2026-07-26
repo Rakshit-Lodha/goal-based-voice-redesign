@@ -141,3 +141,125 @@ def test_build_phases_long_glides_equity_down():
     assert eq[0] > eq[1] > eq[2]
     # All phases have at least one fund
     assert all(p["funds"] for p in phases)
+
+
+def test_career_break_simulation_reserve_and_build_rate():
+    result = fm.simulate_career_break(
+        monthly_income=150_000,
+        essential_outflow=75_000,
+        idle_surplus=40_000,
+        debt_fund_cushion=440_000,
+        duration_months=12,
+        starts_in_months=24,
+        income_reduction_percent=100,
+    )
+
+    assert result["reserve_required"] == 900_000
+    assert result["additional_reserve"] == 460_000
+    assert result["monthly_reserve_build"] == 19_000
+    assert result["goal_surplus_after_build"] == 20_833
+
+
+def test_home_timing_simulation_compares_two_horizons():
+    result = fm.simulate_home_timing(
+        amount_today=10_000_000,
+        current_horizon_years=5,
+        proposed_horizon_years=8,
+        portfolio_value=1_800_000,
+        portfolio_monthly_sip=15_000,
+        equity_value=1_360_000,
+        debt_value=440_000,
+        expected_return=0.11,
+        idle_surplus=40_000,
+    )
+
+    assert result["current"]["horizon_years"] == 5
+    assert result["proposed"]["horizon_years"] == 8
+    assert result["current"]["required_sip"] > result["proposed"]["required_sip"]
+    assert result["sip_delta"] < 0
+
+
+def test_starting_family_simulation_combines_cost_and_education():
+    result = fm.simulate_starting_family(
+        child_arrival_years=2,
+        added_monthly_cost=15_000,
+        education_cost_today=3_000_000,
+        expected_return=0.11,
+        idle_surplus=40_000,
+    )
+
+    assert result["education_horizon_years"] == 20
+    assert result["education_target"] > 3_000_000
+    assert result["education_sip"] > 0
+    assert result["remaining_surplus"] < 40_000
+
+
+def test_runway_extension_uses_weak_funds_then_low_volatility_holdings():
+    holdings = [
+        {
+            "fund": "Strong Core Equity",
+            "category": "large cap",
+            "type": "equity",
+            "current_value": 520_000,
+            "rating": 4,
+            "flag": None,
+        },
+        {
+            "fund": "Weak Mid Cap",
+            "category": "mid cap",
+            "type": "equity",
+            "current_value": 280_000,
+            "rating": 2,
+            "flag": "underperformer",
+        },
+        {
+            "fund": "Thematic Infra",
+            "category": "thematic",
+            "type": "equity",
+            "current_value": 150_000,
+            "rating": 1,
+            "flag": "underperformer",
+        },
+        {
+            "fund": "Liquid Fund",
+            "category": "liquid",
+            "type": "debt",
+            "current_value": 150_000,
+            "rating": 3,
+            "flag": None,
+        },
+        {
+            "fund": "Short Term Debt",
+            "category": "short duration debt",
+            "type": "debt",
+            "current_value": 290_000,
+            "rating": 4,
+            "flag": None,
+        },
+    ]
+
+    result = fm.plan_runway_extensions(
+        liquid_cash=570_000,
+        monthly_draw=75_000,
+        holdings=holdings,
+    )
+
+    twelve, eighteen = result["options"]
+    assert result["current_runway_months"] == 7.6
+    assert twelve["additional_required"] == 330_000
+    assert [(item["fund"], item["amount"]) for item in twelve["withdrawals"]] == [
+        ("Thematic Infra", 150_000),
+        ("Weak Mid Cap", 180_000),
+    ]
+    assert eighteen["additional_required"] == 780_000
+    assert [(item["fund"], item["amount"]) for item in eighteen["withdrawals"]] == [
+        ("Thematic Infra", 150_000),
+        ("Weak Mid Cap", 280_000),
+        ("Liquid Fund", 150_000),
+        ("Short Term Debt", 200_000),
+    ]
+    assert all(
+        item["fund"] != "Strong Core Equity"
+        for option in result["options"]
+        for item in option["withdrawals"]
+    )

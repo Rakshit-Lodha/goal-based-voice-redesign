@@ -1,5 +1,5 @@
 /*
- * Affluent redesign — global styles.
+ * Northstar Wealth — global styles.
  *
  * Projects design tokens (see ./theme/tokens.ts) onto CSS custom properties
  * so plain CSS in components can stay tokens-aware without importing TS.
@@ -7,18 +7,18 @@
  */
 
 :root {
-  /* ABCD red chrome */
-  --navy: #B8181F;
-  --navy-soft: #9E0E15;
-  --navy-edge: #7E0A11;
+  /* Deep neutral blue chrome */
+  --navy: #0B2033;
+  --navy-soft: #102F43;
+  --navy-edge: #061522;
 
   /* Cream surfaces */
   --cream: #F7F2EA;
   --cream-deep: #EBE3D5;
 
-  /* ABCD yellow accent */
-  --champagne: #FFC72C;
-  --champagne-soft: #FFD75E;
+  /* Fresh mint accent */
+  --champagne: #58D6B1;
+  --champagne-soft: #9DEBD3;
 
   /* Signals */
   --green: #3D7C57;
@@ -29,16 +29,16 @@
   --ink: #1A1F2E;
   --ink-soft: #5D6478;
 
-  /* Ivory — for red surfaces (warmed for legibility on red) */
-  --ivory: #FFF5E6;
-  --ivory-soft: rgba(255, 245, 230, 0.72);
-  --ivory-hairline: rgba(255, 199, 44, 0.10);
+  /* Light text for dark surfaces */
+  --ivory: #F4FBF8;
+  --ivory-soft: rgba(244, 251, 248, 0.72);
+  --ivory-hairline: rgba(157, 235, 211, 0.12);
 
-  /* Orb moods — cream-to-gold, contrasts on red */
-  --orb-idle: #FFE9A3;
-  --orb-listening: #FFF0C2;
-  --orb-talking: #FFC72C;
-  --orb-paused: #7A5C2E;
+  /* Orb moods */
+  --orb-idle: #B9F5E3;
+  --orb-listening: #D8FAF0;
+  --orb-talking: #58D6B1;
+  --orb-paused: #52716F;
 
   /* Type */
   --font-display: "Fraunces", "Iowan Old Style", "Apple Garamond", Georgia, serif;
@@ -69,8 +69,8 @@ html, body, #root { height: 100%; }
 body {
   margin: 0;
   background:
-    radial-gradient(1100px 700px at 50% -10%, rgba(184, 24, 31, 0.55), transparent 60%),
-    #5C0810;
+    radial-gradient(1100px 700px at 50% -10%, rgba(88, 214, 177, 0.18), transparent 60%),
+    #061522;
   color: var(--ivory);
   overflow: hidden;
 }

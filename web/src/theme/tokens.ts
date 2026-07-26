@@ -1,5 +1,5 @@
 /**
- * Design tokens — single source of truth for the affluent redesign.
+ * Design tokens — single source of truth for Northstar Wealth.
  *
  * Both consumed directly in TS (when needed) and projected to CSS vars in
  * `index.css`. Keep the two in sync: any new token added here must show up
@@ -7,18 +7,18 @@
  */
 
 export const colors = {
-  // ABCD red chrome — body, phone interior, dark surfaces.
-  navy: "#B8181F",
-  navySoft: "#9E0E15",
-  navyEdge: "#7E0A11",
+  // Deep neutral blue — body, phone interior, dark surfaces.
+  navy: "#0B2033",
+  navySoft: "#102F43",
+  navyEdge: "#061522",
 
   // Cream — artifact cards, hero takeover.
   cream: "#F7F2EA",
   creamDeep: "#EBE3D5",
 
-  // ABCD yellow — the single warm accent. Orb glow, plan number, CTAs.
-  champagne: "#FFC72C",
-  champagneSoft: "#FFD75E",
+  // Fresh mint — orb glow, plan number, and CTAs.
+  champagne: "#58D6B1",
+  champagneSoft: "#9DEBD3",
 
   // Positive / negative signals.
   green: "#3D7C57",
@@ -29,16 +29,16 @@ export const colors = {
   ink: "#1A1F2E",
   inkSoft: "#5D6478",
 
-  // Ivory — for red surfaces. Warmed for legibility on red.
-  ivory: "#FFF5E6",
-  ivorySoft: "rgba(255, 245, 230, 0.72)",
-  ivoryHairline: "rgba(255, 199, 44, 0.10)",
+  // Light text for dark surfaces.
+  ivory: "#F4FBF8",
+  ivorySoft: "rgba(244, 251, 248, 0.72)",
+  ivoryHairline: "rgba(157, 235, 211, 0.12)",
 
-  // Orb moods — cream-to-gold spectrum, contrasts on red.
-  orbIdle: "#FFE9A3",
-  orbListening: "#FFF0C2",
-  orbTalking: "#FFC72C",
-  orbPaused: "#7A5C2E",
+  // Orb moods.
+  orbIdle: "#B9F5E3",
+  orbListening: "#D8FAF0",
+  orbTalking: "#58D6B1",
+  orbPaused: "#52716F",
 } as const;
 
 export const fonts = {

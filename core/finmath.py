@@ -105,6 +105,315 @@ def financial_ratios(monthly_income: float, monthly_expenses: float, monthly_emi
     }
 
 
+def simulate_career_break(
+    *,
+    monthly_income: float,
+    essential_outflow: float,
+    idle_surplus: float,
+    debt_fund_cushion: float,
+    duration_months: int,
+    starts_in_months: int,
+    income_reduction_percent: float,
+) -> dict:
+    """Estimate the reserve and pre-break monthly saving requirement."""
+    income_during = monthly_income * (1 - income_reduction_percent / 100)
+    cash_position_during = income_during - essential_outflow
+    reserve_required = max(0.0, -cash_position_during) * duration_months
+    additional_reserve = max(0.0, reserve_required - debt_fund_cushion)
+    monthly_reserve_build = (
+        additional_reserve / starts_in_months
+        if starts_in_months > 0
+        else additional_reserve
+    )
+    return {
+        "income_during": round(income_during),
+        "cash_position_before": round(monthly_income - essential_outflow),
+        "cash_position_during": round(cash_position_during),
+        "reserve_required": round(reserve_required),
+        "debt_fund_cushion": round(debt_fund_cushion),
+        "additional_reserve": round(additional_reserve),
+        "monthly_reserve_build": round_to_500(monthly_reserve_build),
+        "goal_surplus_after_build": round(idle_surplus - monthly_reserve_build),
+    }
+
+
+def simulate_home_timing(
+    *,
+    amount_today: float,
+    current_horizon_years: int,
+    proposed_horizon_years: int,
+    portfolio_value: float,
+    portfolio_monthly_sip: float,
+    equity_value: float,
+    debt_value: float,
+    expected_return: float,
+    idle_surplus: float,
+) -> dict:
+    """Compare a home goal at two purchase timelines."""
+    growth = blended_growth(equity_value, debt_value)
+
+    def home_case(years: int) -> dict:
+        target = inflate(amount_today, years, PROPERTY_INFLATION)
+        projected = (
+            lumpsum_fv(portfolio_value, growth, years)
+            + sip_fv(portfolio_monthly_sip, growth, years)
+        )
+        gap = max(0.0, target - projected)
+        sip = round_to_500(required_sip(gap, expected_return, years))
+        return {
+            "horizon_years": years,
+            "inflated_target": round(target),
+            "projected_existing": round(projected),
+            "gap": round(gap),
+            "required_sip": sip,
+            "affordability": affordability(sip, idle_surplus),
+        }
+
+    current = home_case(current_horizon_years)
+    proposed = home_case(proposed_horizon_years)
+    return {
+        "amount_today": round(amount_today),
+        "current": current,
+        "proposed": proposed,
+        "sip_delta": proposed["required_sip"] - current["required_sip"],
+    }
+
+
+def simulate_starting_family(
+    *,
+    child_arrival_years: int,
+    added_monthly_cost: float,
+    education_cost_today: float,
+    expected_return: float,
+    idle_surplus: float,
+) -> dict:
+    """Estimate childcare pressure plus a higher-education monthly investment."""
+    education_horizon = child_arrival_years + 18
+    education_target = inflate(
+        education_cost_today,
+        education_horizon,
+        EDUCATION_INFLATION,
+    )
+    education_sip = round_to_500(
+        required_sip(education_target, expected_return, education_horizon)
+    )
+    rounded_monthly_cost = round_to_500(added_monthly_cost)
+    total_monthly_pressure = rounded_monthly_cost + education_sip
+    return {
+        "child_arrival_years": child_arrival_years,
+        "education_horizon_years": education_horizon,
+        "education_target": round(education_target),
+        "education_sip": education_sip,
+        "added_monthly_cost": rounded_monthly_cost,
+        "remaining_surplus": round(idle_surplus - total_monthly_pressure),
+        "affordability": affordability(total_monthly_pressure, idle_surplus),
+    }
+
+
+def _emergency_goal_changes(
+    goals: list[dict],
+    protected_goal_names: set[str],
+    delay_months: int,
+) -> list[dict]:
+    """Return a temporary pause proposal without mutating the live plan."""
+    changes = []
+    for goal in goals:
+        before_sip = float(goal.get("required_sip") or 0)
+        name = str(goal.get("name") or "")
+        protected = name.lower() in protected_goal_names or before_sip <= 0
+        before_horizon = int(goal.get("horizon_years") or 0)
+        after_horizon = (
+            before_horizon
+            if protected
+            else math.ceil((before_horizon * 12 + delay_months) / 12)
+        )
+        changes.append({
+            "name": name,
+            "before_sip": round(before_sip),
+            "after_sip": round(before_sip if protected else 0),
+            "before_horizon_years": before_horizon,
+            "after_horizon_years": after_horizon,
+            "delay_months": 0 if protected else delay_months,
+            "status": "protected" if protected else "paused",
+        })
+    return changes
+
+
+def simulate_income_emergency(
+    *,
+    monthly_income_after: float,
+    duration_months: int,
+    essential_outflow: float,
+    liquid_reserve: float,
+    goals: list[dict],
+    protected_goal_names: set[str],
+) -> dict:
+    """Restructure goal SIPs around a temporary loss of monthly income."""
+    changes = _emergency_goal_changes(
+        goals,
+        protected_goal_names,
+        duration_months,
+    )
+    protected_sip = sum(
+        item["after_sip"]
+        for item in changes
+        if item["status"] == "protected"
+    )
+    monthly_draw = max(
+        0.0,
+        essential_outflow + protected_sip - monthly_income_after,
+    )
+    reserve_required = monthly_draw * duration_months
+    reserve_gap = max(0.0, reserve_required - liquid_reserve)
+    runway_months = (
+        round(liquid_reserve / monthly_draw, 1)
+        if monthly_draw > 0
+        else None
+    )
+    return {
+        "monthly_income_after": round(monthly_income_after),
+        "duration_months": duration_months,
+        "essential_outflow": round(essential_outflow),
+        "liquid_reserve": round(liquid_reserve),
+        "monthly_draw": round(monthly_draw),
+        "reserve_required": round(reserve_required),
+        "reserve_gap": round(reserve_gap),
+        "runway_months": runway_months,
+        "monthly_freed": sum(
+            item["before_sip"] - item["after_sip"] for item in changes
+        ),
+        "goal_changes": changes,
+        "status": "viable" if reserve_gap <= 0 else "needs_adjustment",
+    }
+
+
+def plan_runway_extensions(
+    *,
+    liquid_cash: float,
+    monthly_draw: float,
+    holdings: list[dict],
+    target_months: tuple[int, ...] = (12, 18),
+) -> dict:
+    """Build tax-aware-instruction-ready fund withdrawals for longer runway.
+
+    The ordering is intentional: clean up flagged holdings first, use liquid and
+    short-duration debt next, and disturb suitable core equity only as a last
+    resort. Tax itself is not estimated here.
+    """
+
+    def withdrawal_priority(holding: dict) -> tuple:
+        category = str(holding.get("category") or "").lower()
+        fund = str(holding.get("fund") or "").lower()
+        if holding.get("flag") == "underperformer":
+            return (0, int(holding.get("rating") or 0))
+        if "liquid" in category or "liquid" in fund:
+            return (1, 0)
+        if holding.get("type") == "debt":
+            return (2, 0)
+        return (3, -int(holding.get("rating") or 0))
+
+    def rationale(holding: dict) -> str:
+        category = str(holding.get("category") or "").lower()
+        fund = str(holding.get("fund") or "").lower()
+        if holding.get("flag") == "underperformer":
+            return "Exit this weaker holding before disturbing stronger core funds."
+        if "liquid" in category or "liquid" in fund:
+            return "Already low-volatility and quick to convert into runway."
+        if holding.get("type") == "debt":
+            return "Use lower-volatility debt before selling suitable core equity."
+        return "Use only after weaker and lower-volatility holdings are exhausted."
+
+    ordered_holdings = sorted(
+        (
+            holding
+            for holding in holdings
+            if float(holding.get("current_value") or 0) > 0
+        ),
+        key=withdrawal_priority,
+    )
+    options = []
+    for months in target_months:
+        target_cash = monthly_draw * months
+        additional_required = max(0.0, target_cash - liquid_cash)
+        remaining = additional_required
+        withdrawals = []
+        for holding in ordered_holdings:
+            if remaining <= 0:
+                break
+            amount = min(float(holding["current_value"]), remaining)
+            if amount <= 0:
+                continue
+            withdrawals.append({
+                "fund": holding["fund"],
+                "amount": round(amount),
+                "available_value": round(float(holding["current_value"])),
+                "rationale": rationale(holding),
+            })
+            remaining -= amount
+        options.append({
+            "target_months": months,
+            "target_liquid_cash": round(target_cash),
+            "additional_required": round(additional_required),
+            "withdrawals": withdrawals,
+            "remaining_gap": round(max(0.0, remaining)),
+            "fully_fundable": remaining <= 0,
+        })
+    return {
+        "current_liquid_cash": round(liquid_cash),
+        "current_runway_months": (
+            round(liquid_cash / monthly_draw, 1)
+            if monthly_draw > 0
+            else None
+        ),
+        "options": options,
+        "execution_note": (
+            "Before redeeming, use units held beyond the applicable exit-load and tax "
+            "period first, and verify the final order with a regulated adviser."
+        ),
+    }
+
+
+def simulate_urgent_cost(
+    *,
+    one_time_cost: float,
+    recovery_months: int,
+    liquid_reserve: float,
+    idle_surplus: float,
+    goals: list[dict],
+    protected_goal_names: set[str],
+) -> dict:
+    """Fund an urgent cost and show the temporary goal pause needed to recover."""
+    changes = _emergency_goal_changes(
+        goals,
+        protected_goal_names,
+        recovery_months,
+    )
+    reserve_used = min(one_time_cost, liquid_reserve)
+    immediate_gap = max(0.0, one_time_cost - liquid_reserve)
+    monthly_freed = sum(
+        item["before_sip"] - item["after_sip"] for item in changes
+    )
+    monthly_rebuild_needed = reserve_used / recovery_months
+    recovery_capacity = idle_surplus + monthly_freed
+    return {
+        "one_time_cost": round(one_time_cost),
+        "recovery_months": recovery_months,
+        "liquid_reserve": round(liquid_reserve),
+        "reserve_used": round(reserve_used),
+        "reserve_after": round(liquid_reserve - reserve_used),
+        "immediate_gap": round(immediate_gap),
+        "monthly_rebuild_needed": round_to_500(monthly_rebuild_needed),
+        "monthly_recovery_capacity": round(recovery_capacity),
+        "monthly_freed": round(monthly_freed),
+        "goal_changes": changes,
+        "status": (
+            "viable"
+            if immediate_gap <= 0 and monthly_rebuild_needed <= recovery_capacity
+            else "needs_adjustment"
+        ),
+    }
+
+
 def lumpsum_fv(present_value: float, annual_rate: float, years: float) -> float:
     """FV of a lumpsum: PV × (1 + g)^n."""
     return present_value * (1 + annual_rate) ** years

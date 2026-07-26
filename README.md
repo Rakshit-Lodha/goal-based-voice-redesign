@@ -56,6 +56,13 @@ Open **http://127.0.0.1:5173** in the browser, allow the mic, and click
 **Start call**. The FastAPI backend runs on `http://localhost:8000`, serves PDFs
 from `/output/<filename>`, and exposes the WebRTC offer endpoint at `/api/offer`.
 
+Demo entry points:
+
+- `/` starts the complete first-time planning flow.
+- `/memory` resumes the latest meaningful planning checkpoint.
+- `/simulator` starts from a fresh, fully confirmed demo profile and asks whether
+  to plan a traditional goal or simulate a financial decision.
+
 For the mocked MF Central and Finvu consent screens, enter OTP **1234** in the
 simple on-screen OTP input. OTP requests do not expire while the backend process
 is alive.
@@ -147,6 +154,30 @@ name or age.
 - The dashboard receives live state snapshots over RTVI server messages and
   shows risk, family, MF Central, Finvu AA, goals, SIP gap, current-phase
   portfolio, and the plan PDF link.
+
+### Financial decision simulator
+
+The `/simulator` route does not load or replace cross-session memory. Each call
+starts from the same deterministic balanced-risk demo profile with family,
+mutual funds, Account Aggregator assets, cash flow, and confirmations already
+present.
+
+Maya offers two paths:
+
+- traditional goal planning, which begins directly at the goals stage;
+- a financial decision simulation for a career break, a changed home-purchase
+  timeline, or starting a family.
+
+Every scenario is calculated by deterministic functions in `core/finmath.py`.
+The result appears as a live before-and-after comparison card and remains
+hypothetical; it does not mutate the confirmed financial snapshot.
+
+The same screen also has an **Emergency** action. It starts a separate call with
+a completed emergency-fund, Pune-home, and daughter-education plan already
+loaded. Maya opens with “What’s up, Rakshit? What’s the emergency?”, calculates
+either an income interruption or urgent cost, and shows the impact across every
+goal. The proposal is not applied until the user accepts it, and can be undone
+within the call. Emergency calls never replace `/memory`.
 
 ## Run metrics logging
 

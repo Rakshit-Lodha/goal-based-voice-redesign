@@ -21,6 +21,20 @@ from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
 
 _current_recorder: "RunTranscriptRecorder | None" = None
+_STATE_CHANGING_TOOLS = {
+    "assess_risk_profile",
+    "add_family",
+    "pull_mf_central",
+    "pull_account_aggregator",
+    "add_manual_asset",
+    "confirm_financial_snapshot",
+    "add_goal",
+    "project_existing_corpus",
+    "compute_gap_and_sip",
+    "reprioritize",
+    "build_goal_portfolio",
+    "generate_plan_pdf",
+}
 
 
 def bind(recorder: "RunTranscriptRecorder"):
@@ -69,6 +83,7 @@ class TranscriptEvent:
 class RunTranscriptRecorder:
     def __init__(self, *, output_dir: str = "output/transcripts"):
         self.output_dir = output_dir
+        self.created_at = _now_iso()
         self.events: list[TranscriptEvent] = []
         self._assistant_chunks: list[str] = []
         self._assistant_active = False
@@ -115,20 +130,32 @@ class RunTranscriptRecorder:
 
         self._flush_assistant_response()
         os.makedirs(self.output_dir, exist_ok=True)
-        filename = f"run_transcript_{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}.json"
+        filename = f"run_transcript_{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}.json"
         path = os.path.abspath(os.path.join(self.output_dir, filename))
-        payload = {
-            "created_at": _now_iso(),
-            "events": [
-                {key: value for key, value in event.__dict__.items() if value is not None}
-                for event in self.events
-            ],
-        }
+        payload = self.to_payload()
         with open(path, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2, ensure_ascii=False)
         self._saved_path = path
         logger.info(f"Run transcript saved: {path}")
         return path
+
+    def to_payload(self) -> dict[str, Any]:
+        self._flush_assistant_response()
+        return {
+            "created_at": self.created_at,
+            "events": [
+                {key: value for key, value in event.__dict__.items() if value is not None}
+                for event in self.events
+            ],
+        }
+
+    def has_successful_state_change(self) -> bool:
+        return any(
+            event.type == "tool_result"
+            and event.name in _STATE_CHANGING_TOOLS
+            and not (isinstance(event.result, dict) and event.result.get("error"))
+            for event in self.events
+        )
 
     def _flush_assistant_response(self):
         text = "".join(self._assistant_chunks).strip()

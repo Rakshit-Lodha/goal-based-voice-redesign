@@ -111,6 +111,12 @@ export interface Snapshot {
   plan_pdf_url: string | null;
   progress: Progress;
   last_event: string | null;
+  simulator_mode: boolean;
+  simulator_choice: string | null;
+  last_simulation: Record<string, unknown> | null;
+  emergency_mode: boolean;
+  pending_emergency_plan: Record<string, unknown> | null;
+  emergency_plan_applied: boolean;
   /** Monotonic counter — unique per state event. Used by the artifact queue
    *  to distinguish two consecutive calls to the same tool. */
   tick: number;
@@ -125,6 +131,9 @@ export type ArtifactKind =
   | "income_snapshot"
   | "investments_review"
   | "goal_types_picker"
+  | "simulator_menu"
+  | "scenario_comparison"
+  | "emergency_shockwave"
   | "goals_recap"
   | "inflation_curve"
   | "sip_split"

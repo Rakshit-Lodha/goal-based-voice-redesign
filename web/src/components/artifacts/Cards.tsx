@@ -61,6 +61,60 @@ type MfcReviewData = {
   insights?: Array<{ tone: "good" | "warn" | "bad"; text: string }>;
 };
 
+type SimulatorMenuData = {
+  scenarios?: Array<{
+    key: string;
+    label: string;
+    description: string;
+  }>;
+};
+
+type ScenarioComparisonData = {
+  title?: string;
+  headline?: string;
+  status?: "viable" | "needs_adjustment";
+  comparisons?: Array<{
+    label: string;
+    before: string | number;
+    after: string | number;
+    format?: "inr" | "years" | "months" | "text";
+  }>;
+  recommendation?: string;
+};
+
+type EmergencyShockwaveData = ScenarioComparisonData & {
+  applied?: boolean;
+  undone?: boolean;
+  proposal_ready?: boolean;
+  guidance_steps?: Array<{
+    label: string;
+    detail: string;
+  }>;
+  runway_plan?: {
+    current_liquid_cash: number;
+    current_runway_months: number | null;
+    execution_note: string;
+    options: Array<{
+      target_months: number;
+      additional_required: number;
+      fully_fundable: boolean;
+      remaining_gap: number;
+      withdrawals: Array<{
+        fund: string;
+        amount: number;
+        rationale: string;
+      }>;
+    }>;
+  } | null;
+  goal_changes?: Array<{
+    name: string;
+    before_sip: number;
+    after_sip: number;
+    delay_months: number;
+    status: "protected" | "paused";
+  }>;
+};
+
 export function RiskRevealCard({ data }: { data: RiskData }) {
   return (
     <section>
@@ -184,6 +238,568 @@ export function MfcReviewCard({ data }: { data: MfcReviewData }) {
         .pin.tone-good { background: var(--green); color: var(--cream); }
         .pin.tone-warn { background: var(--champagne); color: var(--ink); }
         .pin.tone-bad  { background: #B14A2A; color: var(--cream); }
+      `}</style>
+    </section>
+  );
+}
+
+export function SimulatorMenuCard({ data }: { data: SimulatorMenuData }) {
+  const scenarios = data.scenarios ?? [];
+  return (
+    <section>
+      <div className="artifact-card-eyebrow">Financial decision simulator</div>
+      <h2 className="artifact-card-title">Which future should we rehearse?</h2>
+      <p className="artifact-card-lede">
+        Maya will compare the decision against your confirmed financial picture.
+      </p>
+      <ul className="artifact-list simulator-options">
+        {scenarios.map((scenario, index) => (
+          <li key={scenario.key}>
+            <span className="simulator-option-number">{index + 1}</span>
+            <span>
+              <b>{scenario.label}</b>
+              <small>{scenario.description}</small>
+            </span>
+          </li>
+        ))}
+      </ul>
+      <style>{`
+        .simulator-options li {
+          justify-content: flex-start;
+          align-items: flex-start;
+        }
+        .simulator-option-number {
+          width: 26px;
+          height: 26px;
+          flex: 0 0 26px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: var(--ink);
+          background: rgba(88, 214, 177, 0.35);
+          font-family: var(--font-display);
+        }
+        .simulator-options b {
+          display: block;
+          text-align: left;
+        }
+        .simulator-options small {
+          display: block;
+          margin-top: 3px;
+          color: var(--ink-soft);
+          font-size: 11px;
+          line-height: 1.4;
+        }
+      `}</style>
+    </section>
+  );
+}
+
+export function ScenarioComparisonCard({ data }: { data: ScenarioComparisonData }) {
+  const comparisons = data.comparisons ?? [];
+  const viable = data.status === "viable";
+  return (
+    <section className="scenario-card">
+      <div className="artifact-card-eyebrow">Financial time machine · {data.title}</div>
+      <h2 className="artifact-card-title">{data.headline ?? "Here is what changes."}</h2>
+      <span className={`scenario-status ${viable ? "viable" : "adjust"}`}>
+        {viable ? "Within reach" : "Trade-off needed"}
+      </span>
+      <div className="scenario-grid scenario-grid-head" aria-hidden="true">
+        <span />
+        <b>Today</b>
+        <b>What if</b>
+      </div>
+      <div className="scenario-comparisons">
+        {comparisons.map((item) => (
+          <div className="scenario-grid" key={item.label}>
+            <span>{item.label}</span>
+            <b>{formatScenarioValue(item.before, item.format)}</b>
+            <b className="scenario-after">{formatScenarioValue(item.after, item.format)}</b>
+          </div>
+        ))}
+      </div>
+      {data.recommendation && (
+        <div className="scenario-recommendation">
+          <span>Maya's recommendation</span>
+          <p>{data.recommendation}</p>
+        </div>
+      )}
+      <style>{`
+        .scenario-status {
+          display: inline-flex;
+          margin-top: 14px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+        .scenario-status.viable {
+          color: #184c3c;
+          background: rgba(88, 214, 177, 0.28);
+        }
+        .scenario-status.adjust {
+          color: #7b3b2d;
+          background: rgba(224, 157, 126, 0.28);
+        }
+        .scenario-grid {
+          display: grid;
+          grid-template-columns: minmax(100px, 1.35fr) 1fr 1fr;
+          gap: 8px;
+          align-items: center;
+          padding: 10px 0;
+          border-bottom: 1px solid var(--cream-deep);
+        }
+        .scenario-grid-head {
+          margin-top: 14px;
+          padding: 0 0 6px;
+          border: 0;
+        }
+        .scenario-grid-head b {
+          color: var(--ink-soft);
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .scenario-grid > span {
+          color: var(--ink-soft);
+          font-size: 11px;
+          line-height: 1.3;
+        }
+        .scenario-grid > b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 15px;
+          font-weight: 500;
+        }
+        .scenario-grid > .scenario-after {
+          color: #16745b;
+        }
+        .scenario-recommendation {
+          margin-top: 16px;
+          padding: 14px;
+          border-radius: 16px;
+          background: rgba(88, 214, 177, 0.13);
+        }
+        .scenario-recommendation span {
+          color: var(--ink-soft);
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .scenario-recommendation p {
+          margin: 7px 0 0;
+          color: var(--ink);
+          font-size: 12px;
+          line-height: 1.5;
+        }
+      `}</style>
+    </section>
+  );
+}
+
+export function EmergencyShockwaveCard({ data }: { data: EmergencyShockwaveData }) {
+  const comparisons = data.comparisons ?? [];
+  const goals = data.goal_changes ?? [];
+  const guidance = data.guidance_steps ?? [];
+  const runway = data.runway_plan;
+  const viable = data.status === "viable";
+  return (
+    <section className="emergency-card">
+      <div className="emergency-signal">
+        <span aria-hidden="true">!</span>
+        Emergency plan
+      </div>
+      <h2 className="artifact-card-title">
+        {data.headline ?? "Maya has reworked the plan."}
+      </h2>
+      <span className={`emergency-status ${data.applied ? "active" : viable ? "ready" : "gap"}`}>
+        {data.undone
+          ? "Original restored"
+          : data.applied
+            ? "Plan now active"
+            : data.proposal_ready === false
+              ? "Let us orient first"
+            : viable
+              ? "Ready to discuss"
+              : "Shortfall remains"}
+      </span>
+
+      {guidance.length > 0 && (
+        <div className="emergency-guidance">
+          <div className="emergency-section-label">How to think about this</div>
+          {guidance.map((step, index) => (
+            <div className="emergency-guidance-step" key={step.label}>
+              <span>{index + 1}</span>
+              <div>
+                <b>{step.label}</b>
+                <p>{step.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {runway && runway.current_runway_months !== null && (
+        <div className="runway-plan">
+          <div className="runway-current">
+            <div>
+              <span>Liquid cash today</span>
+              <b>{inr(runway.current_liquid_cash)}</b>
+            </div>
+            <div>
+              <span>Current runway</span>
+              <b>{runway.current_runway_months} months</b>
+            </div>
+          </div>
+          <div className="emergency-section-label">If you want a longer runway</div>
+          <div className="runway-options">
+            {runway.options.map((option) => (
+              <div className="runway-option" key={option.target_months}>
+                <div className="runway-option-head">
+                  <b>{option.target_months} months</b>
+                  <span>+ {inr(option.additional_required)}</span>
+                </div>
+                <ul>
+                  {option.withdrawals.map((withdrawal) => (
+                    <li key={`${option.target_months}-${withdrawal.fund}`}>
+                      <span>{withdrawal.fund}</span>
+                      <b>{inr(withdrawal.amount)}</b>
+                    </li>
+                  ))}
+                </ul>
+                {!option.fully_fundable && (
+                  <small>Still short by {inr(option.remaining_gap)}</small>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="runway-note">{runway.execution_note}</p>
+        </div>
+      )}
+
+      {comparisons.length > 0 && (
+        <div className="emergency-comparisons">
+          {comparisons.map((item) => (
+            <div key={item.label}>
+              <span>{item.label}</span>
+              <p>
+                <s>{formatScenarioValue(item.before, item.format)}</s>
+                <b>{formatScenarioValue(item.after, item.format)}</b>
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {goals.length > 0 && (
+        <div className="emergency-goals">
+          <div className="emergency-section-label">Shockwave across your goals</div>
+          {goals.map((goal) => (
+            <div className="emergency-goal" key={goal.name}>
+              <div>
+                <b>{goal.name}</b>
+                <small>
+                  {goal.status === "protected"
+                    ? "Protected"
+                    : `Paused ${goal.delay_months} months`}
+                </small>
+              </div>
+              <span>
+                {inr(goal.before_sip)}
+                <i aria-hidden="true">→</i>
+                <strong>{inr(goal.after_sip)}</strong>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {data.recommendation && (
+        <div className="emergency-next">
+          <span>Maya's move</span>
+          <p>{data.recommendation}</p>
+        </div>
+      )}
+
+      <style>{`
+        .emergency-card {
+          position: relative;
+        }
+        .emergency-signal {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #9b3e27;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+        }
+        .emergency-signal > span {
+          width: 22px;
+          height: 22px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: #fff8f4;
+          background: #b14a2a;
+          font-family: var(--font-display);
+          font-size: 14px;
+        }
+        .emergency-card .artifact-card-title {
+          margin-top: 13px;
+          max-width: 295px;
+        }
+        .emergency-status {
+          display: inline-flex;
+          margin-top: 13px;
+          padding: 6px 10px;
+          border-radius: 999px;
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+        .emergency-status.ready,
+        .emergency-status.active {
+          color: #184c3c;
+          background: rgba(88, 214, 177, 0.25);
+        }
+        .emergency-status.gap {
+          color: #8d3825;
+          background: rgba(177, 74, 42, 0.15);
+        }
+        .emergency-comparisons {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin-top: 17px;
+        }
+        .emergency-comparisons > div {
+          min-width: 0;
+          padding: 11px 9px;
+          border: 1px solid var(--cream-deep);
+          border-radius: 13px;
+          background: rgba(255, 255, 255, 0.4);
+        }
+        .emergency-comparisons span {
+          display: block;
+          min-height: 24px;
+          color: var(--ink-soft);
+          font-size: 9px;
+          line-height: 1.3;
+        }
+        .emergency-comparisons p {
+          display: grid;
+          gap: 3px;
+          margin: 7px 0 0;
+        }
+        .emergency-comparisons s {
+          color: #999b9f;
+          font-size: 10px;
+        }
+        .emergency-comparisons b {
+          color: #9b3e27;
+          font-family: var(--font-display);
+          font-size: 14px;
+          text-decoration: none;
+        }
+        .emergency-goals {
+          margin-top: 18px;
+        }
+        .runway-plan {
+          margin-top: 18px;
+          padding: 14px;
+          border: 1px solid rgba(88, 214, 177, 0.24);
+          border-radius: 17px;
+          background: rgba(88, 214, 177, 0.08);
+        }
+        .runway-current {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-bottom: 14px;
+        }
+        .runway-current > div {
+          padding: 9px 10px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.55);
+        }
+        .runway-current span,
+        .runway-current b {
+          display: block;
+        }
+        .runway-current span {
+          color: var(--ink-soft);
+          font-size: 9px;
+        }
+        .runway-current b {
+          margin-top: 4px;
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 14px;
+        }
+        .runway-options {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-top: 8px;
+        }
+        .runway-option {
+          min-width: 0;
+          padding: 10px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.65);
+        }
+        .runway-option-head {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 6px;
+        }
+        .runway-option-head b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 13px;
+        }
+        .runway-option-head span {
+          color: #9b3e27;
+          font-size: 9px;
+          font-weight: 700;
+        }
+        .runway-option ul {
+          display: grid;
+          gap: 6px;
+          margin: 9px 0 0;
+          padding: 0;
+          list-style: none;
+        }
+        .runway-option li {
+          display: grid;
+          gap: 2px;
+          padding-top: 6px;
+          border-top: 1px solid var(--cream-deep);
+        }
+        .runway-option li span {
+          color: var(--ink-soft);
+          font-size: 8px;
+          line-height: 1.25;
+        }
+        .runway-option li b {
+          color: var(--ink);
+          font-size: 9px;
+        }
+        .runway-option > small {
+          display: block;
+          margin-top: 7px;
+          color: #9b3e27;
+          font-size: 8px;
+        }
+        .runway-note {
+          margin: 10px 0 0;
+          color: var(--ink-soft);
+          font-size: 8px;
+          line-height: 1.4;
+        }
+        .emergency-guidance {
+          display: grid;
+          gap: 10px;
+          margin-top: 18px;
+        }
+        .emergency-guidance-step {
+          display: grid;
+          grid-template-columns: 25px 1fr;
+          gap: 10px;
+          align-items: start;
+          padding: 10px 11px;
+          border-radius: 13px;
+          background: rgba(11, 32, 51, 0.045);
+        }
+        .emergency-guidance-step > span {
+          width: 25px;
+          height: 25px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: #fff8f4;
+          background: #0b2033;
+          font-family: var(--font-display);
+          font-size: 11px;
+        }
+        .emergency-guidance-step b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 13px;
+        }
+        .emergency-guidance-step p {
+          margin: 3px 0 0;
+          color: var(--ink-soft);
+          font-size: 10px;
+          line-height: 1.4;
+        }
+        .emergency-section-label,
+        .emergency-next > span {
+          color: var(--ink-soft);
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.11em;
+          text-transform: uppercase;
+        }
+        .emergency-goal {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 11px 0;
+          border-bottom: 1px solid var(--cream-deep);
+        }
+        .emergency-goal > div b,
+        .emergency-goal > div small {
+          display: block;
+        }
+        .emergency-goal > div b {
+          color: var(--ink);
+          font-family: var(--font-display);
+          font-size: 14px;
+        }
+        .emergency-goal > div small {
+          margin-top: 3px;
+          color: #9b3e27;
+          font-size: 9px;
+          font-weight: 700;
+        }
+        .emergency-goal > span {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          color: #999b9f;
+          font-size: 10px;
+          white-space: nowrap;
+        }
+        .emergency-goal i {
+          font-style: normal;
+        }
+        .emergency-goal strong {
+          color: var(--ink);
+          font-size: 11px;
+        }
+        .emergency-next {
+          margin-top: 16px;
+          padding: 13px;
+          border-radius: 15px;
+          background: rgba(177, 74, 42, 0.08);
+        }
+        .emergency-next p {
+          margin: 6px 0 0;
+          color: var(--ink);
+          font-size: 11px;
+          line-height: 1.45;
+        }
       `}</style>
     </section>
   );
@@ -1376,6 +1992,16 @@ function yearsLabel(years?: number) {
   return `${years} ${years === 1 ? "year" : "years"}`;
 }
 
+function formatScenarioValue(
+  value: string | number,
+  format?: "inr" | "years" | "months" | "text",
+) {
+  if (format === "inr" && typeof value === "number") return inr(value);
+  if (format === "years") return `${value} ${value === 1 ? "year" : "years"}`;
+  if (format === "months") return `${value} ${value === 1 ? "month" : "months"}`;
+  return String(value);
+}
+
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="artifact-metric">
@@ -1387,6 +2013,7 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 
 // Re-export to keep the registry happy with the public surface; kept for
 // snapshot-less consumers that still want the AA assets sum.
+// eslint-disable-next-line react-refresh/only-export-components
 export function _sumAssets(snap: Snapshot | null): number {
   if (!snap?.aa_assets) return 0;
   const { epf, nps, stocks } = snap.aa_assets;

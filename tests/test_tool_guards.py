@@ -69,7 +69,7 @@ def test_financial_snapshot_confirmation_requires_manual_assets_answer():
     }))
 
     assert result["error"] == "missing: the additional-investments answer"
-    assert "PPF, FDs, gold" in result["instruction"]
+    assert "PPF, fixed deposits, gold" in result["instruction"]
 
 
 def test_cashflow_confirmation_is_separate_from_investment_confirmation():

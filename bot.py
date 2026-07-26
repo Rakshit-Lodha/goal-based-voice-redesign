@@ -1,4 +1,4 @@
-"""Wealth Expert — Maya. Pipecat pipeline assembly.
+"""Northstar Wealth — Maya. Pipecat pipeline assembly.
 
 Canonical entrypoint is ``server.py`` (FastAPI on :8000). In dev, run the React
 client with ``cd web && npm run dev`` (Vite on :5173) and open
@@ -15,8 +15,6 @@ from loguru import logger
 
 load_dotenv(override=True)
 
-from pipecat.audio.vad.silero import SileroVADAnalyzer
-from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import LLMRunFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -28,10 +26,20 @@ from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.openai.llm import OpenAILLMService
 from pipecat.services.sarvam.tts import SarvamTTSService
-from pipecat.transports.base_transport import TransportParams
 
 from agent.prompts import GREETING_INSTRUCTION, SYSTEM_PROMPT
 from agent.tools import register_tools
+from core.audio_input import (
+    TranscriptGate,
+    make_transport_params,
+    make_user_aggregator_params,
+)
+from core.call_memory import (
+    DEMO_USER_ID,
+    CallMemoryFinalizer,
+    prepare_call_memory,
+)
+from core.conversation_store import ConversationStore
 from core.run_cost import RunCostMeter, RunCostTracker
 from core.run_transcript import RunTranscriptRecorder, RunTranscriptTap
 from core import session, ui_bus
@@ -40,18 +48,7 @@ from core import run_transcript
 PDF_PORT = 7861
 
 transport_params = {
-    "webrtc": lambda: TransportParams(
-        audio_in_enabled=True,
-        audio_out_enabled=True,
-        # Tuned for noisy demo environments: longer stop_secs avoids chopping
-        # utterances at natural pauses; higher confidence/volume ignores fans, typing.
-        vad_analyzer=SileroVADAnalyzer(params=VADParams(
-            confidence=0.90,
-            start_secs=0.40,
-            stop_secs=0.80,
-            min_volume=0.75,
-        )),
-    ),
+    "webrtc": make_transport_params,
 }
 
 
@@ -74,9 +71,9 @@ def make_stt():
         logger.info("STT: Deepgram")
         return DeepgramSTTService(api_key=os.environ["DEEPGRAM_API_KEY"])
 
-    from pipecat.services.sarvam.stt import SarvamSTTService
+    from services.resilient_sarvam_stt import ResilientSarvamSTTService
     logger.info("STT: Sarvam")
-    return SarvamSTTService(api_key=os.environ["SARVAM_API_KEY"])
+    return ResilientSarvamSTTService(api_key=os.environ["SARVAM_API_KEY"])
 
 
 def resolved_stt_provider() -> str:
@@ -99,10 +96,29 @@ def serve_pdf_dir():
     logger.info(f"Serving plan PDFs from {out} at http://localhost:{PDF_PORT}/")
 
 
-async def run_bot(transport):
-    session.reset()
+async def run_bot(
+    transport,
+    *,
+    memory_mode: str = "fresh",
+    user_id: str = DEMO_USER_ID,
+    conversation_id: str | None = None,
+    conversation_store: ConversationStore | None = None,
+):
+    store = conversation_store or ConversationStore()
+    conversation_id = conversation_id or store.new_conversation_id()
+    memory_context = prepare_call_memory(
+        memory_mode=memory_mode,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        store=store,
+    )
     cost_tracker = RunCostTracker()
     transcript_recorder = RunTranscriptRecorder()
+    memory_finalizer = CallMemoryFinalizer(
+        store=store,
+        context=memory_context,
+        recorder=transcript_recorder,
+    )
     run_transcript.bind(transcript_recorder)
 
     stt_provider = resolved_stt_provider()
@@ -142,17 +158,24 @@ async def run_bot(transport):
     context = LLMContext(
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": GREETING_INSTRUCTION},
+            {
+                "role": "user",
+                "content": memory_context.greeting_instruction or GREETING_INSTRUCTION,
+            },
         ],
         tools=tools,
     )
-    aggregators = LLMContextAggregatorPair(context)
+    aggregators = LLMContextAggregatorPair(
+        context,
+        user_params=make_user_aggregator_params(),
+    )
 
     pipeline = Pipeline([
         transport.input(),
         rtvi,
         RunCostMeter(cost_tracker, name="run_cost_audio_meter"),
         stt,
+        TranscriptGate(name="transcript_noise_gate"),
         RunTranscriptTap(transcript_recorder, name="run_transcript_user_tap"),
         aggregators.user(),
         llm,
@@ -178,6 +201,17 @@ async def run_bot(transport):
     async def on_client_ready(rtvi):
         logger.info("Client ready — Maya speaks first")
         await rtvi.set_bot_ready()
+        if memory_context.resumed or memory_context.mode in {"simulator", "emergency"}:
+            await ui_bus.emit({
+                "type": "state",
+                "payload": session.snapshot(
+                    last_event=(
+                        "memory_restored"
+                        if memory_context.resumed
+                        else f"{memory_context.mode}_profile_loaded"
+                    )
+                ),
+            })
         await task.queue_frames([LLMRunFrame()])
 
     @transport.event_handler("on_client_disconnected")
@@ -186,6 +220,7 @@ async def run_bot(transport):
         cost_tracker.log_summary_once()
         transcript_path = transcript_recorder.save_once()
         cost_tracker.save_once(metadata={**run_metadata, "transcript_path": transcript_path})
+        memory_finalizer.save_once()
         ui_bus.unbind()
         run_transcript.unbind()
         await task.cancel()
@@ -197,6 +232,7 @@ async def run_bot(transport):
         cost_tracker.log_summary_once()
         transcript_path = transcript_recorder.save_once()
         cost_tracker.save_once(metadata={**run_metadata, "transcript_path": transcript_path})
+        memory_finalizer.save_once()
         run_transcript.unbind()
 
 

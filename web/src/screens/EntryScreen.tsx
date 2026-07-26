@@ -1,436 +1,604 @@
 /**
- * Entry screen — Aditya Birla Capital (ABCD) post-KYC home with a premium
- * Maya Wealth Desk card sitting in the white sheet above the Track grid.
- * Tapping the card calls onStart() which mounts the voice agent surface.
+ * A neutral, standalone landing page for the planning demo.
  *
- * Layout mirrors the ABCD app home: red hero zone (My Holdings, CashBack,
- * ABCD Coins) → white sheet (Maya entry + 4 Track tiles) → curved-scoop
- * bottom nav with My Track active.
+ * This deliberately avoids imitating an existing finance super-app: the page
+ * gives the voice-planning experience its own brand, hierarchy, and entry point.
  */
-export default function EntryScreen({ onStart }: { onStart: () => void }) {
+import type { MemoryLoadState } from "../memory";
+import type { MemoryMode } from "../pcClient";
+
+type EntryScreenProps = {
+  routeMode: MemoryMode;
+  memoryState: MemoryLoadState;
+  onStart: () => void;
+  onStartOver: () => void;
+  onEmergency?: () => void;
+};
+
+export default function EntryScreen({
+  routeMode,
+  memoryState,
+  onStart,
+  onStartOver,
+  onEmergency = () => undefined,
+}: EntryScreenProps) {
+  const simulator = routeMode === "simulator";
+  const loading = routeMode === "resume" && memoryState.status === "loading";
+  const memory = memoryState.status === "available" ? memoryState.memory : null;
+  const unavailable = routeMode === "resume" && memoryState.status === "unavailable";
+  const headline = memory?.completed_plan
+    ? "Review or update your wealth plan"
+    : memory?.headline;
+
   return (
-    <div className="entry-root">
-      {/* RED HERO ZONE */}
-      <div className="hero">
-        <div className="topbar">
-          <button className="holdings-pill" type="button">
-            My Holdings <span className="arrow">↗</span>
+    <main className="entry-root">
+      <div className="entry-scroll">
+        <header className="entry-header">
+          <div className="entry-brand" aria-label="Northstar Wealth">
+            <span className="entry-brand-mark">N</span>
+            <span>Northstar</span>
+          </div>
+          <button className="entry-profile" type="button" aria-label="Open profile">
+            RL
           </button>
-          <div className="spacer" />
-          <div className="dice-icon" title="Rewards">🎲</div>
-          <div className="icon-btn" title="Notifications">🔔</div>
-          <div className="avatar">RL</div>
+        </header>
+
+        <section className="entry-welcome">
+          <p className="entry-eyebrow">Good morning, Rakshit</p>
+          <h1>Build a plan for the life you want.</h1>
+          <p className="entry-lede">
+            Turn your goals, investments, and monthly cash flow into one clear plan.
+          </p>
+        </section>
+
+        <div className="planner-card-wrap">
+          <button
+            className={`planner-card${loading ? " planner-card-loading" : ""}`}
+            onClick={onStart}
+            aria-label={
+              simulator
+                ? "Start financial decision simulator with Maya"
+                : memory
+                  ? "Resume planning with Maya"
+                  : "Start planning with Maya"
+            }
+            disabled={loading}
+            type="button"
+          >
+            <span className="planner-kicker">
+              <span className="planner-status" />
+              {loading
+                ? "Checking saved plan"
+                : memory
+                  ? "Maya remembers"
+                  : simulator
+                    ? "Your financial picture is ready"
+                  : unavailable
+                    ? "No previous plan found"
+                    : "Maya is ready"}
+            </span>
+            <strong>
+              {loading
+                ? "Loading your last conversation"
+                : memory
+                  ? `Welcome back, ${memory.user_name}`
+                  : simulator
+                    ? "Rehearse a decision before you make it"
+                  : "Start your guided wealth plan"}
+            </strong>
+            {memory && <span className="planner-memory-headline">{headline}</span>}
+            <span className="planner-copy">
+              {loading
+                ? "Bringing back your latest planning checkpoint."
+                : memory
+                  ? memory.summary
+                  : simulator
+                    ? "Plan a traditional goal or ask Maya to simulate a major life change."
+                  : "A private, voice-led conversation. About fifteen minutes."}
+            </span>
+            <span className="planner-action">
+              {memory ? "Resume planning" : simulator ? "Start simulating" : "Start planning"}
+              <span aria-hidden="true">→</span>
+            </span>
+            <span className="planner-orbit planner-orbit-one" />
+            <span className="planner-orbit planner-orbit-two" />
+          </button>
+          {memory && (
+            <button
+              className="planner-start-over"
+              onClick={onStartOver}
+              type="button"
+            >
+              Start over with a fresh plan
+            </button>
+          )}
+          {simulator && (
+            <button
+              className="planner-emergency"
+              onClick={onEmergency}
+              type="button"
+              aria-label="Start emergency planning with Maya"
+            >
+              <span className="planner-emergency-icon" aria-hidden="true">!</span>
+              <span>
+                <b>Emergency</b>
+                <small>Rework my existing plan now</small>
+              </span>
+              <span className="planner-emergency-arrow" aria-hidden="true">→</span>
+            </button>
+          )}
         </div>
 
-        <div className="hero-cards">
-          <div className="hero-card">
-            <div className="icon">💰</div>
-            <div className="value">₹0</div>
-            <div className="label">CashBack</div>
-            <div className="chev">›</div>
+        <section className="entry-section" aria-labelledby="overview-heading">
+          <div className="section-heading">
+            <h2 id="overview-heading">Your overview</h2>
+            <button type="button">View details</button>
           </div>
-          <div className="hero-card">
-            <div className="icon">🪙</div>
-            <div className="value">50</div>
-            <div className="label">ABCD Coins</div>
-            <div className="chev">›</div>
+          <div className="overview-card">
+            <div>
+              <span className="overview-label">
+                {simulator ? "Demo financial profile" : "Linked portfolio"}
+              </span>
+              <strong>
+                {simulator ? "Investments and cash flow ready" : "Connect your investments"}
+              </strong>
+            </div>
+            <span className="overview-icon" aria-hidden="true">↗</span>
           </div>
-        </div>
+        </section>
+
+        <section className="entry-section" aria-labelledby="goals-heading">
+          <div className="section-heading">
+            <h2 id="goals-heading">Plan around your goals</h2>
+            <span>Explore</span>
+          </div>
+          <div className="goal-grid">
+            <article className="goal-card goal-card-sage">
+              <span className="goal-icon" aria-hidden="true">⌂</span>
+              <strong>Home</strong>
+              <p>Map the deposit, timeline, and monthly investment.</p>
+            </article>
+            <article className="goal-card goal-card-sand">
+              <span className="goal-icon" aria-hidden="true">◎</span>
+              <strong>Retirement</strong>
+              <p>Build long-term independence one phase at a time.</p>
+            </article>
+          </div>
+        </section>
       </div>
 
-      {/* WHITE SHEET */}
-      <div className="sheet">
-        <button
-          className="maya-card"
-          onClick={onStart}
-          aria-label="Open Maya Wealth Desk"
-          type="button"
-        >
-          <span className="badge">Wealth Desk</span>
-          <h2>Plan your first move with Maya</h2>
-          <p>Your private wealth expert is ready — voice-led goal planning in minutes.</p>
-          <div className="orb" />
-          <div className="card-arrow">›</div>
+      <nav className="entry-nav" aria-label="Primary navigation">
+        <button className="entry-nav-item active" type="button">
+          <span aria-hidden="true">⌂</span>
+          Home
         </button>
-
-        <div className="tracks">
-          <div className="track">
-            <div className="title">Portfolio Track <span className="chev-circle">›</span></div>
-            <div className="art">💼</div>
-            <div className="foot">
-              <div className="row"><span>🔒</span><span>₹XX,XXX</span></div>
-              <div className="row"><span>⊕</span><span>Link account</span></div>
-            </div>
-            <div className="eye">⊘</div>
-          </div>
-          <div className="track">
-            <div className="title">Credit Track <span className="chev-circle">›</span></div>
-            <div className="art">📊</div>
-            <div className="foot">Check your score &amp; trends</div>
-          </div>
-          <div className="track">
-            <div className="title">Vehicle Track <span className="chev-circle">›</span></div>
-            <div className="art">🚗</div>
-          </div>
-          <div className="track">
-            <div className="title">Spend Track <span className="chev-circle">›</span></div>
-            <div className="art">🧮</div>
-          </div>
-        </div>
-      </div>
-
-      {/* CURVED-SCOOP BOTTOM NAV */}
-      <nav className="nav">
-        <svg className="nav-bg" viewBox="0 -22 390 108" preserveAspectRatio="none">
-          <path d="M 0 30 L 140 30 Q 195 -28 250 30 L 390 30 L 390 86 L 0 86 Z" fill="#FFFFFF" />
-          <path
-            d="M 0 30 L 140 30 Q 195 -28 250 30 L 390 30"
-            stroke="var(--champagne)"
-            strokeWidth="1.6"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="nav-items">
-          <div className="nav-item">
-            <div className="ic">💵</div>
-            <span>Invest</span>
-          </div>
-          <div className="nav-item">
-            <div className="ic">
-              <div className="abcd-grid"><span>a</span><span>b</span><span>c</span><span>d</span></div>
-            </div>
-            <span>Home</span>
-          </div>
-          <div className="nav-item active">
-            <div className="badge">📈</div>
-            <span>My Track</span>
-          </div>
-          <div className="nav-item">
-            <div className="ic">🤝</div>
-            <span>Loans</span>
-          </div>
-          <div className="nav-item">
-            <div className="ic">🛡</div>
-            <span>Insure</span>
-          </div>
-        </div>
+        <button className="entry-nav-item" type="button">
+          <span aria-hidden="true">◫</span>
+          Portfolio
+        </button>
+        <button className="entry-nav-planner" onClick={onStart} type="button">
+          <span aria-hidden="true">✦</span>
+          Plan
+        </button>
+        <button className="entry-nav-item" type="button">
+          <span aria-hidden="true">◎</span>
+          Goals
+        </button>
+        <button className="entry-nav-item" type="button">
+          <span aria-hidden="true">○</span>
+          Profile
+        </button>
       </nav>
 
       <style>{`
         .entry-root {
           position: absolute;
           inset: 0;
-          color: var(--ivory);
+          color: #13283b;
+          background:
+            radial-gradient(circle at 94% 2%, rgba(88, 214, 177, 0.18), transparent 28%),
+            linear-gradient(180deg, #f7fbfa 0%, #eef4f2 100%);
           font-family: var(--font-body);
           overflow: hidden;
         }
-
-        /* ===== RED HERO ===== */
-        .hero {
+        .entry-scroll {
           position: absolute;
-          left: 0; right: 0; top: 0;
-          padding: 14px 20px 0;
-          background: linear-gradient(180deg, #D9232E 0%, var(--navy) 100%);
-          height: 232px;
-        }
-        .topbar {
-          margin-top: 10px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .holdings-pill {
-          display: inline-flex; align-items: center; gap: 8px;
-          height: 36px; padding: 0 14px;
-          background: var(--champagne);
-          color: var(--ink);
-          border-radius: 8px 8px 18px 8px;
-          font-weight: 800; font-size: 14px;
-          border: none;
-          cursor: pointer;
-          font-family: inherit;
-        }
-        .holdings-pill .arrow {
-          color: var(--navy);
-          font-weight: 900;
-        }
-        .spacer { flex: 1; }
-        .icon-btn {
-          width: 36px; height: 36px;
-          display: grid; place-items: center;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.16);
-          color: var(--ivory);
-          font-size: 16px;
-        }
-        .avatar {
-          width: 36px; height: 36px;
-          display: grid; place-items: center;
-          border-radius: 50%;
-          background: #FFFFFF;
-          color: var(--navy);
-          font-weight: 800; font-size: 12px;
-          letter-spacing: 0.04em;
-        }
-        .dice-icon {
-          width: 36px; height: 36px;
-          display: grid; place-items: center;
-          border-radius: 8px;
-          background: #FFFFFF;
-          font-size: 18px;
-        }
-
-        .hero-cards {
-          margin-top: 16px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .hero-card {
-          position: relative;
-          height: 124px;
-          padding: 12px 14px 10px;
-          border-radius: 18px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.18);
-          overflow: hidden;
-        }
-        .hero-card .icon { font-size: 28px; line-height: 1; }
-        .hero-card .value {
-          position: absolute;
-          left: 14px; bottom: 32px;
-          font-size: 26px; font-weight: 800;
-          color: var(--ivory);
-          letter-spacing: -0.01em;
-        }
-        .hero-card .label {
-          position: absolute;
-          left: 14px; bottom: 10px;
-          font-size: 14px; font-weight: 600;
-          color: var(--ivory);
-        }
-        .hero-card .chev {
-          position: absolute;
-          right: 12px; top: 50%;
-          transform: translateY(-50%);
-          font-size: 18px;
-          color: rgba(255,255,255,0.85);
-        }
-
-        /* ===== WHITE SHEET ===== */
-        .sheet {
-          position: absolute;
-          left: 0; right: 0; bottom: 0;
-          top: 224px;
-          background: #F6F7FA;
-          border-radius: 24px 24px 0 0;
-          padding: 10px 16px 100px;
+          inset: 0;
+          padding: 0 22px 104px;
+          overflow-x: hidden;
           overflow-y: auto;
-        }
-        .sheet::before {
-          content: "";
-          display: block;
-          width: 60px; height: 4px;
-          border-radius: 2px;
-          background: #C9CED6;
-          margin: 4px auto 12px;
+          overscroll-behavior: contain;
         }
 
-        .maya-card {
-          display: block;
-          width: 100%;
-          position: relative;
-          margin-bottom: 14px;
-          padding: 16px 18px;
-          border-radius: 16px;
-          background:
-            radial-gradient(circle at 92% 30%, rgba(255,233,163,0.55), transparent 42%),
-            linear-gradient(135deg, #1A0508 0%, #3a1a04 60%, #1A0508 100%);
-          border: 1px solid var(--champagne);
-          color: var(--ivory);
-          text-align: left;
-          overflow: hidden;
-          cursor: pointer;
-          min-height: 92px;
-          font-family: inherit;
-          transition: transform var(--dur-fast) var(--ease-out),
-                      box-shadow var(--dur-fast) var(--ease-out);
-        }
-        .maya-card:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 12px 24px rgba(0,0,0,0.35);
-        }
-        .maya-card .badge {
-          display: inline-block;
-          padding: 3px 8px;
-          background: var(--champagne);
-          color: var(--ink);
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.06em;
-          border-radius: 4px;
-          text-transform: uppercase;
-        }
-        .maya-card h2 {
-          margin: 8px 0 4px;
-          font-size: 17px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          max-width: 220px;
-          font-family: var(--font-display);
-        }
-        .maya-card p {
-          margin: 0;
-          font-size: 12px;
-          color: rgba(255,245,230,0.78);
-          line-height: 1.4;
-          max-width: 220px;
-        }
-        .maya-card .orb {
-          position: absolute;
-          right: -10px; top: 50%;
-          transform: translateY(-50%);
-          width: 88px; height: 88px;
-          border-radius: 50%;
-          background: radial-gradient(circle at 35% 30%,
-            #fff5d1 0 12%,
-            var(--champagne-soft) 36%,
-            #C2362E 70%,
-            #5C0810 100%);
-          box-shadow: 0 0 24px rgba(255,199,44,0.45);
-        }
-        .maya-card .card-arrow {
-          position: absolute;
-          right: 16px; bottom: 16px;
-          width: 28px; height: 28px;
-          display: grid; place-items: center;
-          border-radius: 50%;
-          background: var(--champagne);
-          color: var(--ink);
-          font-weight: 900;
-          font-size: 14px;
-        }
-
-        .tracks {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .track {
-          position: relative;
-          height: 156px;
-          padding: 14px;
-          background: #FFFFFF;
-          color: var(--ink);
-          border-radius: 14px;
-          box-shadow: 0 1px 0 rgba(0,0,0,0.04);
-          overflow: hidden;
-        }
-        .track .title {
+        .entry-header {
+          height: 78px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          font-size: 15px;
-          font-weight: 800;
-          color: var(--ink);
         }
-        .track .chev-circle {
-          width: 22px; height: 22px;
-          display: grid; place-items: center;
-          border-radius: 50%;
-          border: 1px solid #D0D5DD;
-          font-size: 11px;
-          color: #6E7480;
+        .entry-brand {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          color: #0b2033;
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
-        .track .art {
-          position: absolute;
-          left: 12px; right: 12px;
-          top: 44px;
-          height: 70px;
+        .entry-brand-mark {
+          width: 30px;
+          height: 30px;
           display: grid;
           place-items: center;
-          font-size: 42px;
-        }
-        .track .foot {
-          position: absolute;
-          left: 14px; right: 14px; bottom: 12px;
-          font-size: 11px;
-          color: #6E7480;
-          line-height: 1.35;
-        }
-        .track .foot .row { display: flex; align-items: center; gap: 6px; }
-        .track .foot .row + .row { margin-top: 2px; }
-        .track .eye {
-          position: absolute;
-          right: 14px; bottom: 14px;
-          color: #B3B9C3;
-        }
-
-        /* ===== CURVED BOTTOM NAV ===== */
-        .nav {
-          position: absolute;
-          left: 0; right: 0; bottom: 0;
-          height: 86px;
-          z-index: 5;
-          overflow: visible;
-        }
-        .nav-bg {
-          position: absolute;
-          left: 0; right: 0; top: -22px;
-          width: 100%; height: 108px;
-          overflow: visible;
-          pointer-events: none;
-        }
-        .nav-items {
-          position: relative;
-          z-index: 1;
-          height: 100%;
-          display: grid;
-          grid-template-columns: repeat(5, 1fr);
-          align-items: end;
-          padding-bottom: 12px;
-        }
-        .nav-item {
-          display: grid;
-          justify-items: center;
-          gap: 4px;
-          font-size: 10px;
-          color: #6E7480;
+          border-radius: 10px 10px 10px 3px;
+          color: #0b2033;
+          background: #58d6b1;
+          font-family: var(--font-display);
+          font-size: 18px;
           font-weight: 600;
         }
-        .nav-item .ic {
-          width: 22px; height: 22px;
-          display: grid; place-items: center;
-          font-size: 16px;
-        }
-        .nav-item.active { color: var(--navy); }
-        .nav-item.active .badge {
-          width: 44px; height: 44px;
+        .entry-profile {
+          width: 38px;
+          height: 38px;
+          display: grid;
+          place-items: center;
+          border: 1px solid #d7e2df;
           border-radius: 50%;
-          background: #FFFFFF;
-          border: 2px solid var(--navy);
-          display: grid; place-items: center;
-          margin-top: -28px;
-          margin-bottom: 4px;
-          color: var(--navy);
-          font-size: 20px;
-          font-weight: 800;
-          box-shadow: 0 4px 10px rgba(184,24,31,0.18);
+          color: #345064;
+          background: rgba(255, 255, 255, 0.78);
+          font-size: 12px;
+          font-weight: 700;
         }
-        .abcd-grid {
+
+        .entry-welcome {
+          padding: 16px 0 24px;
+        }
+        .entry-eyebrow {
+          margin: 0 0 8px;
+          color: #4d6b70;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .entry-welcome h1 {
+          max-width: 320px;
+          color: #0b2033;
+          font-family: var(--font-display);
+          font-size: 37px;
+          font-weight: 500;
+          line-height: 1.05;
+          letter-spacing: -0.035em;
+        }
+        .entry-lede {
+          max-width: 320px;
+          margin: 13px 0 0;
+          color: #5e7381;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+
+        .planner-card {
+          position: relative;
+          width: 100%;
+          min-height: 220px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 22px;
+          border: 0;
+          border-radius: 26px;
+          color: #f4fbf8;
+          background:
+            radial-gradient(circle at 92% 86%, rgba(88, 214, 177, 0.2), transparent 34%),
+            linear-gradient(145deg, #102f43 0%, #071a2a 100%);
+          box-shadow: 0 20px 44px rgba(13, 44, 60, 0.18);
+          overflow: hidden;
+          text-align: left;
+          transition: transform var(--dur-fast) var(--ease-out),
+                      box-shadow var(--dur-fast) var(--ease-out);
+        }
+        .planner-card-wrap {
+          display: grid;
+          gap: 10px;
+        }
+        .planner-emergency {
+          width: 100%;
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 14px 16px;
+          border: 1px solid rgba(177, 74, 42, 0.2);
+          border-radius: 18px;
+          color: #6f2e22;
+          background: linear-gradient(135deg, #fff4ef 0%, #fbe5db 100%);
+          box-shadow: 0 10px 24px rgba(111, 46, 34, 0.08);
+          text-align: left;
+        }
+        .planner-emergency:hover {
+          transform: translateY(-1px);
+        }
+        .planner-emergency-icon {
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: #fff8f4;
+          background: #b14a2a;
+          font-family: var(--font-display);
+          font-size: 20px;
+          font-weight: 700;
+        }
+        .planner-emergency b,
+        .planner-emergency small {
+          display: block;
+        }
+        .planner-emergency b {
+          font-size: 13px;
+        }
+        .planner-emergency small {
+          margin-top: 2px;
+          color: #8a5b50;
+          font-size: 11px;
+        }
+        .planner-emergency-arrow {
+          font-size: 18px;
+        }
+        .planner-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 24px 52px rgba(13, 44, 60, 0.24);
+        }
+        .planner-kicker {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #9debd3;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.09em;
+          text-transform: uppercase;
+        }
+        .planner-status {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #58d6b1;
+          box-shadow: 0 0 0 5px rgba(88, 214, 177, 0.1);
+        }
+        .planner-card strong {
+          max-width: 250px;
+          margin-top: 22px;
+          font-family: var(--font-display);
+          font-size: 27px;
+          font-weight: 500;
+          line-height: 1.08;
+          letter-spacing: -0.025em;
+        }
+        .planner-memory-headline {
+          max-width: 260px;
+          margin-top: 8px;
+          color: #b9f5e3;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1.3;
+          overflow-wrap: anywhere;
+        }
+        .planner-copy {
+          max-width: 245px;
+          margin-top: 10px;
+          color: rgba(237, 249, 245, 0.7);
+          font-size: 12px;
+          line-height: 1.5;
+          overflow-wrap: anywhere;
+        }
+        .planner-action {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 20px;
+          color: #9debd3;
+          font-size: 13px;
+          font-weight: 700;
+        }
+        .planner-action span {
+          width: 26px;
+          height: 26px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: #0b2033;
+          background: #58d6b1;
+        }
+        .planner-orbit {
+          position: absolute;
+          border: 1px solid rgba(157, 235, 211, 0.17);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        .planner-orbit-one {
+          width: 126px;
+          height: 126px;
+          right: -42px;
+          top: -20px;
+        }
+        .planner-orbit-two {
+          width: 72px;
+          height: 72px;
+          right: -7px;
+          top: 7px;
+          background: radial-gradient(circle at 38% 34%, #b9f5e3 0 7%, #58d6b1 32%, #168b79 74%, #0e4c50 100%);
+          box-shadow: 0 0 44px rgba(88, 214, 177, 0.24);
+        }
+        .planner-card:disabled {
+          cursor: wait;
+        }
+        .planner-card-loading .planner-status {
+          animation: memory-pulse 1.1s ease-in-out infinite alternate;
+        }
+        .planner-start-over {
+          justify-self: start;
+          padding: 7px 4px;
+          color: #45646a;
+          font-size: 12px;
+          font-weight: 700;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .planner-start-over:focus-visible {
+          outline: 2px solid #168b79;
+          outline-offset: 3px;
+          border-radius: 4px;
+        }
+        @keyframes memory-pulse {
+          from { opacity: 0.45; }
+          to { opacity: 1; }
+        }
+
+        .entry-section {
+          margin-top: 26px;
+        }
+        .section-heading {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        }
+        .section-heading h2 {
+          color: #183044;
+          font-size: 16px;
+          font-weight: 700;
+        }
+        .section-heading button,
+        .section-heading > span {
+          color: #52716f;
+          font-size: 11px;
+          font-weight: 600;
+        }
+        .overview-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          min-height: 76px;
+          padding: 17px 18px;
+          border: 1px solid #dce7e3;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.74);
+        }
+        .overview-card > div {
+          display: grid;
+          gap: 4px;
+        }
+        .overview-label {
+          color: #71858e;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .overview-card strong {
+          color: #183044;
+          font-size: 14px;
+          font-weight: 650;
+        }
+        .overview-icon {
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: #17354a;
+          background: #dff6ef;
+        }
+
+        .goal-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          grid-template-rows: 1fr 1fr;
-          width: 14px; height: 14px;
-          gap: 1px;
-          font-size: 7px;
-          font-weight: 900;
-          color: var(--ink);
+          gap: 12px;
+        }
+        .goal-card {
+          min-height: 146px;
+          padding: 16px;
+          border-radius: 19px;
+          color: #173044;
+        }
+        .goal-card-sage { background: #dceee8; }
+        .goal-card-sand { background: #eee8dc; }
+        .goal-icon {
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          margin-bottom: 18px;
+          border-radius: 11px;
+          background: rgba(255, 255, 255, 0.6);
+          font-size: 18px;
+        }
+        .goal-card strong {
+          display: block;
+          font-size: 14px;
+        }
+        .goal-card p {
+          margin: 6px 0 0;
+          color: #667a80;
+          font-size: 10px;
+          line-height: 1.45;
+        }
+
+        .entry-nav {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 82px;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          align-items: center;
+          padding: 8px 10px max(8px, env(safe-area-inset-bottom));
+          border-top: 1px solid rgba(22, 50, 64, 0.09);
+          background: rgba(249, 252, 251, 0.95);
+          backdrop-filter: blur(18px);
+          z-index: 4;
+        }
+        .entry-nav-item,
+        .entry-nav-planner {
+          display: grid;
+          justify-items: center;
+          gap: 5px;
+          color: #75878f;
+          font-size: 9px;
+          font-weight: 600;
+        }
+        .entry-nav-item > span {
+          font-size: 18px;
           line-height: 1;
         }
-        .abcd-grid span { display: grid; place-items: center; }
+        .entry-nav-item.active { color: #12344a; }
+        .entry-nav-planner {
+          align-self: start;
+          margin-top: -24px;
+          color: #16394a;
+        }
+        .entry-nav-planner > span {
+          width: 48px;
+          height: 48px;
+          display: grid;
+          place-items: center;
+          border: 5px solid #f4f8f7;
+          border-radius: 17px;
+          color: #0a2738;
+          background: #58d6b1;
+          box-shadow: 0 8px 18px rgba(37, 132, 112, 0.24);
+          font-size: 19px;
+        }
+
+        @media (max-height: 760px) {
+          .entry-welcome { padding-top: 4px; }
+          .entry-welcome h1 { font-size: 32px; }
+          .planner-card { min-height: 196px; }
+        }
       `}</style>
-    </div>
+    </main>
   );
 }

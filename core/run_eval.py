@@ -9,6 +9,11 @@ from typing import Any
 
 
 EXPECTED_TOOL_ORDER = [
+    "confirm_resume",
+    "choose_experience",
+    "simulate_life_event",
+    "analyze_financial_emergency",
+    "commit_emergency_plan",
     "assess_risk_profile",
     "add_family",
     "pull_mf_central",
@@ -20,6 +25,7 @@ EXPECTED_TOOL_ORDER = [
     "compute_gap_and_sip",
     "reprioritize",
     "build_goal_portfolio",
+    "show_artifact",
     "generate_plan_pdf",
 ]
 
@@ -114,7 +120,11 @@ def _tool_order_is_allowed(events: list[dict[str, Any]]) -> EvalCheck:
         if name not in EXPECTED_TOOL_ORDER:
             failures.append(f"unknown tool {name}")
             continue
-        if name == "pull_account_aggregator" and "pull_mf_central" not in seen:
+        if name == "simulate_life_event" and "choose_experience" not in seen:
+            failures.append("simulate_life_event appeared before choose_experience")
+        elif name == "commit_emergency_plan" and "analyze_financial_emergency" not in seen:
+            failures.append("commit_emergency_plan appeared before analyze_financial_emergency")
+        elif name == "pull_account_aggregator" and "pull_mf_central" not in seen:
             failures.append("pull_account_aggregator appeared before pull_mf_central")
         elif name == "confirm_financial_snapshot" and "pull_account_aggregator" not in seen:
             failures.append("confirm_financial_snapshot appeared before pull_account_aggregator")
@@ -163,6 +173,10 @@ def _financial_snapshot_before_goals(events: list[dict[str, Any]]) -> EvalCheck:
         if event.get("name") == "confirm_financial_snapshot":
             result = event.get("result") or {}
             finances_confirmed = result.get("financial_snapshot_confirmed") is True
+        if event.get("name") == "choose_experience":
+            result = event.get("result") or {}
+            if result.get("choice") == "traditional":
+                finances_confirmed = True
         if event.get("name") == "add_goal" and not finances_confirmed:
             failures.append("add_goal result appeared before financial snapshot confirmation")
     return EvalCheck(
@@ -174,6 +188,22 @@ def _financial_snapshot_before_goals(events: list[dict[str, Any]]) -> EvalCheck:
 
 def _plan_pdf_generated(events: list[dict[str, Any]]) -> EvalCheck:
     for event in _tool_results(events):
+        if event.get("name") == "commit_emergency_plan":
+            result = event.get("result") or {}
+            if result.get("applied"):
+                return EvalCheck(
+                    "plan_pdf_generated",
+                    True,
+                    "commit_emergency_plan activated a usable emergency plan",
+                )
+        if event.get("name") == "simulate_life_event":
+            result = event.get("result") or {}
+            if result.get("scenario") and result.get("recommendation"):
+                return EvalCheck(
+                    "plan_pdf_generated",
+                    True,
+                    "simulate_life_event returned a usable comparison",
+                )
         if event.get("name") != "generate_plan_pdf":
             continue
         result = event.get("result") or {}
